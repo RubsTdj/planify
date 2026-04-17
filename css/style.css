@@ -10,6 +10,7 @@
   --border: #e5e7eb;
   --radius: 16px;
   --radius-sm: 10px;
+  --bottom-bar-height: calc(76px + env(safe-area-inset-bottom, 0px));
 }
 
 body {
@@ -25,8 +26,9 @@ body {
 #screenApp {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   height: 100dvh;
+  overflow: hidden;
+  padding-bottom: var(--bottom-bar-height);
 }
 
 /* Disable double-tap zoom on all interactive elements */
@@ -56,7 +58,7 @@ button, input, a, [onclick] {
   font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: var(--text);
 }
 
-/* Text — defined once, shared by auth + PIN screens */
+/* Text */
 .auth-title {
   font-size: 20px; font-weight: 700; text-align: center;
   color: var(--text); margin-bottom: 6px;
@@ -127,10 +129,10 @@ button, input, a, [onclick] {
 /* ── Header ── */
 .header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 20px; background: var(--card);
+  padding: 10px 20px;
+  background: var(--card);
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 100;
-  flex-wrap: wrap;
   flex-shrink: 0;
 }
 .header-logo { display: flex; align-items: center; gap: 10px; }
@@ -141,20 +143,20 @@ button, input, a, [onclick] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 20px 6px;
+  padding: 6px 16px 4px;
   flex-shrink: 0;
 }
 
 .month-nav h2 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .month-nav-btn {
-  width: 38px; height: 38px;
+  width: 34px; height: 34px;
   border-radius: 50%; border: 1.5px solid var(--border);
-  background: var(--card); font-size: 16px;
+  background: var(--card); font-size: 14px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 0.2s;
   flex-shrink: 0;
@@ -166,7 +168,7 @@ button, input, a, [onclick] {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   padding: 0 5px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   flex-shrink: 0;
 }
 
@@ -203,13 +205,13 @@ button, input, a, [onclick] {
 
 /* ── Day cell ── */
 .day-cell {
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--card);
   border: 2px solid transparent;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 6px 4px 4px;
+  padding: 5px 3px 3px;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
@@ -218,33 +220,23 @@ button, input, a, [onclick] {
 }
 
 .day-cell:active { transform: scale(0.95); }
-
 .day-cell.past { opacity: 0.45; }
-
 .day-cell.other-month {
   background: transparent;
   border-color: transparent;
   opacity: 0.3;
 }
-
 .day-cell.today {
   border-color: #6366f1;
   background: #f5f3ff;
 }
-
 .day-cell.selected {
   border-color: #6366f1;
   background: #eef2ff;
   box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
 }
-
-.day-cell.weekend {
-  background: #fafaff;
-}
-
-.day-cell.has-events {
-  background: var(--card);
-}
+.day-cell.weekend { background: #fafaff; }
+.day-cell.has-events { background: var(--card); }
 
 /* Day number */
 .day-number {
@@ -255,19 +247,17 @@ button, input, a, [onclick] {
   padding-left: 2px;
 }
 
-.day-cell.today .day-number {
-  color: #6366f1;
-}
+.day-cell.today .day-number { color: #6366f1; }
 
 .day-cell.today .day-number-bubble {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px; height: 24px;
+  width: 22px; height: 22px;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
   border-radius: 50%;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -435,17 +425,16 @@ button, input, a, [onclick] {
 
 .sheet-body { padding: 16px 20px 32px; }
 
-/* ── Misc ── */
-.bottom-spacer {
-  flex-shrink: 0;
-  height: calc(78px + env(safe-area-inset-bottom, 16px));
-}
+/* ── Suppression du bottom-spacer — plus nécessaire ── */
+.bottom-spacer { display: none; }
+
 ::-webkit-scrollbar { width: 0; }
 
 /* ── Print ── */
 @media print {
-  body { max-width: 100%; margin: 0; background: white; height: auto; }
-  .header, .bottom-bar, .bottom-spacer, .batch-counter, .overlay, .bottom-sheet, .toast { display: none !important; }
+  body { max-width: 100%; margin: 0; background: white; height: auto; overflow: visible; }
+  #screenApp { height: auto; padding-bottom: 0; overflow: visible; }
+  .header, .bottom-bar, .batch-counter, .overlay, .bottom-sheet, .toast { display: none !important; }
   .month-nav-btn { display: none !important; }
   .month-nav { justify-content: center; padding: 10px 0; }
   .month-nav h2 { font-size: 28px; }
@@ -459,9 +448,8 @@ button, input, a, [onclick] {
   .day-cell.today { border: 2px solid #333 !important; }
   .event-tag { font-size: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .weekday-header span { font-size: 10px; }
-  .print-legend  { display: flex !important; }
-  .print-header  { display: block !important; }
-  #screenApp { height: auto; }
+  .print-legend { display: flex !important; }
+  .print-header { display: block !important; }
 }
 
 .print-legend {
