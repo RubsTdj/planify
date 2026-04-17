@@ -117,11 +117,11 @@ body {
 
 /* ── PIN pad ────────────────────────────────────────────────────────────── */
 .pin-dots {
-  display: flex; gap: 12px; justify-content: center;
-  margin: 0 0 24px;
+  display: flex; gap: 16px; justify-content: center;
+  margin: 0 0 32px;
 }
 .pin-dot {
-  width: 13px; height: 13px; border-radius: 50%;
+  width: 16px; height: 16px; border-radius: 50%;
   border: 2px solid #c4b5fd;
   background: transparent;
   transition: background 0.15s, transform 0.15s;
@@ -144,28 +144,28 @@ body {
 .pin-pad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  max-width: 264px;
+  max-width: 320px;
 }
 .pin-key {
-  height: 60px; border-radius: 14px;
+  height: 76px; border-radius: 18px;
   border: 1.5px solid var(--border);
   background: var(--card);
   font-family: 'Inter', sans-serif;
-  font-size: 20px; font-weight: 600; color: var(--text);
+  font-size: 26px; font-weight: 600; color: var(--text);
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px;
+  gap: 2px;
   transition: background 0.12s, transform 0.12s;
   user-select: none;
 }
 .pin-key:active { background: #eef2ff; transform: scale(0.93); }
 .pin-key .pin-key-sub {
-  font-size: 7px; font-weight: 600; letter-spacing: 1px;
+  font-size: 9px; font-weight: 600; letter-spacing: 1px;
   color: var(--text-secondary); text-transform: uppercase;
 }
-.pin-key.del { font-size: 18px; border-color: transparent; background: transparent; }
+.pin-key.del { font-size: 22px; border-color: transparent; background: transparent; }
 .pin-key.empty { border: none; background: transparent; cursor: default; }
 .pin-key.empty:active { transform: none; }
 
