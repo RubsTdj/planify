@@ -16,7 +16,7 @@ async function init() {
   // Load data + ensure loader shows for at least 2s to enjoy the animation
   const [_] = await Promise.all([
     loadData(),
-    new Promise(r => setTimeout(r, 2000)),
+    new Promise(r => setTimeout(r, 4000)),
   ]);
 
   hideLoader();
