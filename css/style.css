@@ -22,7 +22,6 @@ body {
 }
 
 #screenApp {
-  display: flex;
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
@@ -33,40 +32,17 @@ button, input, a, [onclick] {
   touch-action: manipulation;
 }
 
-/* ── Auth & PIN screens ───────────────────────────────────────────────── */
+/* ── Auth screen ─────────────────────────────────────────────────────────── */
 .auth-screen {
   position: fixed; inset: 0;
   background: var(--bg);
   display: flex; align-items: center; justify-content: center;
   z-index: 900;
-  overflow: hidden;
 }
-/* Auth (email/OTP) — centered card */
-#screenAuth .auth-inner {
-  width: 100%; max-width: 340px;
+.auth-inner {
+  width: 100%; max-width: 360px;
   display: flex; flex-direction: column; align-items: center;
   padding: 0 32px;
-}
-/* PIN — full height, top/bottom distributed like native iOS */
-#screenPin {
-  align-items: stretch;
-  padding: 0;
-}
-#screenPin .auth-inner {
-  width: 100%; max-width: 480px;
-  height: 100%;
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: space-between;
-  padding: 80px 24px calc(50px + env(safe-area-inset-bottom, 16px));
-}
-.pin-top {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 6px;
-}
-.pin-top .auth-title { color: #1c1c1e; font-size: 22px; font-weight: 600; }
-.pin-top .auth-subtitle { color: #6b6b6b; font-size: 14px; margin-bottom: 0; }
-.pin-bottom {
-  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 
 /* Logo block */
@@ -138,23 +114,6 @@ button, input, a, [onclick] {
 .otp-digit:focus { border-color: #6366f1; }
 .otp-row.shake { animation: pinShake 0.4s ease; }
 
-/* ── PIN pad ────────────────────────────────────────────────────────────── */
-.pin-dots {
-  display: flex; gap: 20px; justify-content: center;
-  margin: 20px 0 0;
-}
-.pin-dot {
-  width: 14px; height: 14px; border-radius: 50%;
-  border: 2px solid #8e8e93;
-  background: transparent;
-  transition: background 0.12s, transform 0.12s;
-}
-.pin-dot.filled {
-  background: #1c1c1e;
-  border-color: #1c1c1e;
-  transform: scale(1.1);
-}
-.pin-dots.shake { animation: pinShake 0.4s ease; }
 @keyframes pinShake {
   0%,100% { transform: translateX(0); }
   20%      { transform: translateX(-10px); }
@@ -162,47 +121,6 @@ button, input, a, [onclick] {
   60%      { transform: translateX(-6px); }
   80%      { transform: translateX(6px); }
 }
-
-/* PIN screen background */
-#screenPin { background: #f2f2f7; } /* iOS system grey */
-
-/* PIN numpad — iOS native circle style */
-.pin-pad {
-  display: grid;
-  grid-template-columns: repeat(3, 76px);
-  grid-auto-rows: 76px;
-  gap: 18px;
-  justify-content: center;
-}
-.pin-key {
-  width: 76px; height: 76px;
-  border-radius: 50%;
-  border: none;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-  font-family: 'Inter', sans-serif;
-  font-size: 28px; font-weight: 400; color: #000;
-  cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0px;
-  transition: background 0.08s;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.pin-key:active { background: #b0b0b8; box-shadow: none; }
-.pin-key .pin-key-sub {
-  font-size: 8px; font-weight: 500; letter-spacing: 1.5px;
-  color: #6b6b6b; text-transform: uppercase;
-  margin-top: 1px;
-}
-.pin-key.del {
-  background: transparent; box-shadow: none;
-  font-size: 22px; color: #000;
-}
-.pin-key.del:active { background: rgba(0,0,0,0.08); }
-.pin-key.empty { background: transparent; box-shadow: none; cursor: default; }
-.pin-key.empty:active { background: transparent; }
 
 /* ── Header ── */
 .header {

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Planify</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -37,7 +37,7 @@
 <!-- ── Auth screen ─────────────────────────────────────────────────────────── -->
 <div id="screenAuth" class="auth-screen" style="display:none;">
   <div class="auth-inner">
-    <!-- Logo -->
+
     <div class="auth-logo">
       <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect width="64" height="64" rx="18" fill="url(#ga)"/>
@@ -56,7 +56,7 @@
       <h1 class="auth-app-name">Planify</h1>
     </div>
 
-    <!-- Step 1: email (première connexion / création compte) -->
+    <!-- Étape 1 : email -->
     <div id="stepEmail">
       <h2 class="auth-title">Bienvenue 👋</h2>
       <p class="auth-subtitle">Entre ton email pour créer ton compte ou te connecter.</p>
@@ -69,20 +69,7 @@
       </div>
     </div>
 
-    <!-- Step 1b: re-auth (session expirée après plusieurs mois) -->
-    <div id="stepEmailReauth" style="display:none;">
-      <div class="auth-sent-icon">🔑</div>
-      <h2 class="auth-title">Reconnexion</h2>
-      <p class="auth-subtitle">Ta session a expiré. Entre ton email pour te reconnecter une dernière fois.</p>
-      <div class="auth-form">
-        <input type="email" id="authEmailReauth" class="auth-input" placeholder="prenom@email.com"
-               autocomplete="email" inputmode="email"
-               onkeydown="if(event.key==='Enter') sendOtpCodeReauth()">
-        <button id="authReauthBtn" class="auth-btn" onclick="sendOtpCodeReauth()">Envoyer le code</button>
-      </div>
-    </div>
-
-    <!-- Step 2: saisie du code OTP -->
+    <!-- Étape 2 : code OTP -->
     <div id="stepOtpCode" style="display:none;">
       <div class="auth-sent-icon">📩</div>
       <h2 class="auth-title">Entre ton code</h2>
@@ -97,71 +84,17 @@
       </div>
       <button class="auth-btn-ghost" onclick="showAuthStep('stepEmail'); clearOtp()">← Changer l'email</button>
     </div>
-  </div>
-</div>
 
-<!-- ── PIN screen ──────────────────────────────────────────────────────────── -->
-<div id="screenPin" class="auth-screen" style="display:none;">
-  <div class="auth-inner">
-
-    <!-- Setup -->
-    <div id="stepPinSetup">
-      <div class="pin-top">
-        <h2 class="auth-title">Crée ton code</h2>
-        <p class="auth-subtitle">6 chiffres pour sécuriser ton planning</p>
-        <div class="pin-dots">
-          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-        </div>
-      </div>
-      <div class="pin-bottom">
-        <div class="pin-pad" id="pinPadSetup"></div>
-      </div>
-    </div>
-
-    <!-- Confirm -->
-    <div id="stepPinConfirm" style="display:none;">
-      <div class="pin-top">
-        <h2 class="auth-title">Confirme ton code</h2>
-        <p class="auth-subtitle">Entre à nouveau les 6 chiffres</p>
-        <div class="pin-dots">
-          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-        </div>
-      </div>
-      <div class="pin-bottom">
-        <div class="pin-pad" id="pinPadConfirm"></div>
-      </div>
-    </div>
-
-    <!-- Verify (returning user) -->
-    <div id="stepPinVerify" style="display:none;">
-      <div class="pin-top">
-        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="64" height="64" rx="18" fill="url(#gv)"/>
-          <circle cx="23" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
-          <circle cx="32" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
-          <circle cx="41" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
-          <circle cx="23" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
-          <circle cx="32" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
-          <circle cx="41" cy="39" r="5.5" fill="white"/>
-          <defs>
-            <linearGradient id="gv" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <h2 class="auth-title">Bon retour 👋</h2>
-        <div class="pin-dots">
-          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-        </div>
-      </div>
-      <div class="pin-bottom">
-        <div class="pin-pad" id="pinPadVerify"></div>
-        <button class="auth-btn-ghost" id="biometricBtn" onclick="tryBiometric()" style="display:none;">
-          <span id="biometricIcon">🔒</span> Face ID / Touch ID
-        </button>
+    <!-- Étape session expirée -->
+    <div id="stepExpired" style="display:none;">
+      <div class="auth-sent-icon">🔑</div>
+      <h2 class="auth-title">Session expirée</h2>
+      <p class="auth-subtitle">Entre ton email pour te reconnecter.</p>
+      <div class="auth-form">
+        <input type="email" id="expiredEmail" class="auth-input" placeholder="prenom@email.com"
+               autocomplete="email" inputmode="email"
+               onkeydown="if(event.key==='Enter') sendExpiredOtp()">
+        <button id="expiredBtn" class="auth-btn" onclick="sendExpiredOtp()">Envoyer le code</button>
       </div>
     </div>
 
@@ -169,7 +102,7 @@
 </div>
 
 <!-- ── App ─────────────────────────────────────────────────────────────────── -->
-<div id="screenApp" style="display:none; flex-direction:column; height:100dvh;">
+<div id="screenApp" style="display:none;">
 
   <div class="header">
     <div class="header-logo">
