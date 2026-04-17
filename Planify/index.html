@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planify</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="icon">🩺</div>
+    <h1>Planify</h1>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn" onclick="printCalendar()" title="Imprimer">🖨️</button>
+    <button class="header-btn" onclick="exportICS()" title="Exporter .ics">📅</button>
+  </div>
+</div>
+
+<div class="month-nav">
+  <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
+  <h2 id="monthTitle"></h2>
+  <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
+</div>
+
+<div class="calendar-container">
+  <div class="weekday-header">
+    <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+  <div class="print-legend" id="printLegend"></div>
+  <div class="print-header">Planify — généré le <span id="printDate"></span></div>
+</div>
+
+<div class="bottom-spacer"></div>
+<div class="batch-counter" id="batchCounter"></div>
+<div id="toast" class="toast"></div>
+
+<div class="bottom-bar" id="bottomBar">
+  <button class="batch-btn" onclick="toggleBatchMode()">⚡ Multi-select</button>
+  <button class="batch-btn today-btn" onclick="goToday()">📍 Aujourd'hui</button>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Event picker sheet -->
+<div class="bottom-sheet" id="eventSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <h3 id="sheetTitle">Choisir un événement</h3>
+    <div class="sheet-date" id="sheetDate"></div>
+  </div>
+  <div class="sheet-current" id="sheetCurrent" style="display:none;">
+    <div class="sheet-current-title">Sur ce jour</div>
+    <div id="currentEventsList"></div>
+  </div>
+  <div class="sheet-divider" id="sheetDivider" style="display:none;"></div>
+  <div class="sheet-section">
+    <div class="sheet-section-title">Travail</div>
+    <div class="sheet-grid" id="workChips"></div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-section-title">Repos</div>
+    <div class="sheet-grid" id="offChips"></div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-section-title">Vacances</div>
+    <div class="sheet-grid" id="vacationChips"></div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-section-title">Perso</div>
+    <div class="sheet-grid" id="customChips"></div>
+    <button class="manage-custom-btn" id="manageCustomBtn" style="display:none;">🗑️ Gérer mes types</button>
+  </div>
+  <div style="height: 24px;"></div>
+</div>
+
+<!-- Custom event creation sheet -->
+<div class="bottom-sheet" id="customSheet">
+  <div class="sheet-handle"></div>
+  <div class="modal-content">
+    <h3>✨ Nouvel événement</h3>
+    <div class="form-group">
+      <label>Nom</label>
+      <input type="text" class="form-input" id="customName" placeholder="Ex: Formation, RDV...">
+    </div>
+    <div class="form-group">
+      <label>Emoji</label>
+      <div class="emoji-picker" id="emojiPicker"></div>
+    </div>
+    <div class="form-group">
+      <label>Durée</label>
+      <div class="duration-selector">
+        <div class="duration-option active" data-dur="allday" onclick="selectDuration('allday', this)">
+          <span class="dur-emoji">📅</span>
+          <span class="dur-label">Journée</span>
+          <span class="dur-desc">Toute la journée</span>
+        </div>
+        <div class="duration-option" data-dur="half" onclick="selectDuration('half', this)">
+          <span class="dur-emoji">🕐</span>
+          <span class="dur-label">Demi-journée</span>
+          <span class="dur-desc">Matin ou après-midi</span>
+        </div>
+        <div class="duration-option" data-dur="custom" onclick="selectDuration('custom', this)">
+          <span class="dur-emoji">⏰</span>
+          <span class="dur-label">Horaires</span>
+          <span class="dur-desc">Début / fin</span>
+        </div>
+      </div>
+      <div class="half-day-selector" id="halfDaySelector">
+        <div class="half-day-option active" data-half="morning" onclick="selectHalfDay('morning', this)">
+          <span class="dur-emoji">☀️</span>
+          <span class="dur-label">Matin</span>
+          <span class="dur-desc">8h → 12h</span>
+        </div>
+        <div class="half-day-option" data-half="afternoon" onclick="selectHalfDay('afternoon', this)">
+          <span class="dur-emoji">🌅</span>
+          <span class="dur-label">Après-midi</span>
+          <span class="dur-desc">13h → 18h</span>
+        </div>
+      </div>
+      <div class="time-row-container" id="timeRowContainer">
+        <div class="time-row">
+          <div class="form-group">
+            <label>Début</label>
+            <input type="time" class="form-input" id="customStart">
+          </div>
+          <div class="form-group">
+            <label>Fin</label>
+            <input type="time" class="form-input" id="customEnd">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeCustomSheet()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveCustomEvent()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Load order matters: palette → storage → toast → calendar → sheet → modal → export → app -->
+<script src="js/palette.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/sheet.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
