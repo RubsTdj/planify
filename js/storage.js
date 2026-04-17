@@ -59,8 +59,8 @@ async function seedDefaultPresets(uid) {
     { id: `preset_manucure_${uid}`,      label: 'Manucure',      emoji: '💅', duration: 'half',   all_day: false, half_day: 'morning', start_time: '08:00', end_time: '12:00', is_deleted: false, user_id: uid },
     { id: `preset_formation_${uid}`,     label: 'Formation',     emoji: '📋', duration: 'allday', all_day: true,  half_day: null,      start_time: null,    end_time: null,    is_deleted: false, user_id: uid },
   ];
-  const { error } = await sb.from('custom_types').upsert(presets, { onConflict: 'id' });
-  if (error) { console.error('seedDefaultPresets:', error); return; }
+  const { error } = await sb.from('custom_types').insert(presets);
+  if (error && error.code !== '23505') { console.error('seedDefaultPresets:', error); return; }
   presets.forEach(p => DEFAULT_PRESETS.push(dbRowToCustomType(p)));
 }
 
@@ -69,8 +69,11 @@ async function saveEventAdd(dateStr, typeId) {
   const uid = currentUser?.id;
   const { error } = await sb
     .from('events')
-    .upsert({ date: dateStr, type_id: typeId, user_id: uid }, { onConflict: 'date,type_id,user_id' });
-  if (error) { console.error('saveEventAdd:', error); showToast('⚠️ Erreur de sauvegarde'); }
+    .insert({ date: dateStr, type_id: typeId, user_id: uid });
+  if (error && error.code !== '23505') { // ignore duplicate
+    console.error('saveEventAdd:', error);
+    showToast('⚠️ Erreur de sauvegarde');
+  }
 }
 
 // Remove a single event from a day
@@ -91,8 +94,11 @@ async function saveEventBatch(dates, typeId) {
   const rows = dates.map(d => ({ date: d, type_id: typeId, user_id: uid }));
   const { error } = await sb
     .from('events')
-    .upsert(rows, { onConflict: 'date,type_id,user_id' });
-  if (error) { console.error('saveEventBatch:', error); showToast('⚠️ Erreur de sauvegarde'); }
+    .insert(rows);
+  if (error && error.code !== '23505') {
+    console.error('saveEventBatch:', error);
+    showToast('⚠️ Erreur de sauvegarde');
+  }
 }
 
 // Save a new custom event type
@@ -101,8 +107,11 @@ async function saveCustomType(newType) {
   const row = { ...customTypeToDbRow(newType), user_id: uid };
   const { error } = await sb
     .from('custom_types')
-    .upsert(row, { onConflict: 'id' });
-  if (error) { console.error('saveCustomType:', error); showToast('⚠️ Erreur de sauvegarde'); }
+    .insert(row);
+  if (error && error.code !== '23505') {
+    console.error('saveCustomType:', error);
+    showToast('⚠️ Erreur de sauvegarde');
+  }
 }
 
 // Delete a custom/preset type: hard delete from DB + clean up all events using it
