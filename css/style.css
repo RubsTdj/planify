@@ -95,7 +95,24 @@ body {
 .auth-btn-ghost:active { color: var(--text); }
 
 /* Sent icon */
-.auth-sent-icon { font-size: 52px; margin-bottom: 16px; }
+.auth-sent-icon { font-size: 52px; margin-bottom: 16px; text-align: center; }
+
+/* OTP digit row */
+.otp-row {
+  display: flex; gap: 8px; justify-content: center;
+  margin: 20px 0 4px;
+}
+.otp-digit {
+  width: 44px; height: 54px;
+  border: 2px solid var(--border); border-radius: 12px;
+  text-align: center; font-family: 'Inter', sans-serif;
+  font-size: 22px; font-weight: 700; color: var(--text);
+  background: var(--card); outline: none;
+  transition: border-color 0.15s;
+  caret-color: #6366f1;
+}
+.otp-digit:focus { border-color: #6366f1; }
+.otp-row.shake { animation: pinShake 0.4s ease; }
 
 /* ── PIN pad ────────────────────────────────────────────────────────────── */
 .pin-dots {

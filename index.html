@@ -59,22 +59,30 @@
     <!-- Step 1: email entry -->
     <div id="stepEmail">
       <h2 class="auth-title">Connexion</h2>
-      <p class="auth-subtitle">Entre ton email pour recevoir un lien magique de connexion.</p>
+      <p class="auth-subtitle">Entre ton email pour recevoir un code à 6 chiffres.</p>
       <div class="auth-form">
         <input type="email" id="authEmail" class="auth-input" placeholder="prenom@email.com"
                autocomplete="email" inputmode="email"
-               onkeydown="if(event.key==='Enter') sendMagicLink()">
+               onkeydown="if(event.key==='Enter') sendOtpCode()">
         <div id="authError" class="auth-error" style="display:none;"></div>
-        <button id="authSubmitBtn" class="auth-btn" onclick="sendMagicLink()">Continuer</button>
+        <button id="authSubmitBtn" class="auth-btn" onclick="sendOtpCode()">Envoyer le code</button>
       </div>
     </div>
 
-    <!-- Step 2: magic link sent confirmation -->
-    <div id="stepMagicSent" style="display:none;">
-      <div class="auth-sent-icon">📬</div>
-      <h2 class="auth-title">Vérifie tes emails</h2>
-      <p class="auth-subtitle">Un lien de connexion t'a été envoyé. Clique dessus depuis ton téléphone pour accéder à l'app.</p>
-      <button class="auth-btn-ghost" onclick="showAuthStep('stepEmail')">← Changer l'email</button>
+    <!-- Step 2: OTP code entry -->
+    <div id="stepOtpCode" style="display:none;">
+      <div class="auth-sent-icon">📩</div>
+      <h2 class="auth-title">Entre ton code</h2>
+      <p class="auth-subtitle">Un code à 6 chiffres a été envoyé à<br><strong id="otpEmailDisplay"></strong></p>
+      <div class="otp-row">
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1">
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1">
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1">
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1">
+        <input class="otp-digit" type="text" inputmode="numeric" maxlength="1">
+      </div>
+      <button class="auth-btn-ghost" onclick="showAuthStep('stepEmail'); clearOtp()">← Changer l'email</button>
     </div>
   </div>
 </div>

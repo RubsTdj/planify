@@ -11,6 +11,7 @@ function showScreen(id) {
 // ── Entry point called by app.js ─────────────────────────────────────────────
 async function initAuth() {
   buildPinPads();
+  initOtpInputs();
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
@@ -33,33 +34,89 @@ async function initAuth() {
   return false;
 }
 
-// ── Email Magic Link auth ─────────────────────────────────────────────────────
-async function sendMagicLink() {
+// ── Email OTP auth (code saisi dans l'app — compatible PWA iOS) ───────────────
+async function sendOtpCode() {
   const email = document.getElementById('authEmail').value.trim();
   if (!email || !email.includes('@')) { showAuthError('Entre une adresse email valide'); return; }
 
   setAuthLoading(true);
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
+  });
   setAuthLoading(false);
 
   if (error) { showAuthError(error.message); return; }
-  showAuthStep('stepMagicSent');
+
+  // Store email for verification step
+  document.getElementById('otpEmailDisplay').textContent = email;
+  showAuthStep('stepOtpCode');
+  // Auto-focus first digit
+  setTimeout(() => document.querySelector('.otp-digit')?.focus(), 100);
 }
 
-// Listen for auth state changes (magic link callback)
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    currentUser = session.user;
-    const pin = localStorage.getItem('planify_pin');
-    if (!pin) {
-      pinMode = 'setup';
-      showScreen('screenPin');
-      showPinStep('stepPinSetup');
-    } else {
-      await launchApp();
-    }
+async function verifyOtpCode() {
+  const digits = [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
+  if (digits.length < 6) { showAuthError('Entre les 6 chiffres du code'); return; }
+
+  const email = document.getElementById('authEmail').value.trim();
+  setAuthLoading(true);
+  const { data, error } = await sb.auth.verifyOtp({ email, token: digits, type: 'email' });
+  setAuthLoading(false);
+
+  if (error) {
+    showAuthError('Code incorrect ou expiré');
+    shakeOtp();
+    return;
   }
-});
+
+  currentUser = data.user;
+  const pin = localStorage.getItem('planify_pin');
+  if (!pin) {
+    pinMode = 'setup';
+    showScreen('screenPin');
+    showPinStep('stepPinSetup');
+  } else {
+    await launchApp();
+  }
+}
+
+function shakeOtp() {
+  const row = document.querySelector('.otp-row');
+  if (!row) return;
+  row.classList.add('shake');
+  setTimeout(() => { row.classList.remove('shake'); clearOtp(); }, 500);
+}
+
+function clearOtp() {
+  document.querySelectorAll('.otp-digit').forEach(i => { i.value = ''; });
+  document.querySelector('.otp-digit')?.focus();
+}
+
+// OTP digit navigation — auto-advance + backspace
+function initOtpInputs() {
+  const inputs = [...document.querySelectorAll('.otp-digit')];
+  inputs.forEach((input, idx) => {
+    input.addEventListener('input', e => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val.slice(-1);
+      if (val && idx < inputs.length - 1) inputs[idx + 1].focus();
+      if (inputs.every(i => i.value)) verifyOtpCode();
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !input.value && idx > 0) inputs[idx - 1].focus();
+    });
+    input.addEventListener('paste', e => {
+      const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      if (pasted.length === 6) {
+        inputs.forEach((inp, i) => { inp.value = pasted[i] || ''; });
+        inputs[5].focus();
+        setTimeout(verifyOtpCode, 50);
+      }
+      e.preventDefault();
+    });
+  });
+}
 
 // ── PIN setup & verification ──────────────────────────────────────────────────
 let pinBuffer = '';
@@ -249,7 +306,7 @@ function buildPinPads() {
 
 // ── Auth screen helpers ───────────────────────────────────────────────────────
 function showAuthStep(stepId) {
-  ['stepEmail', 'stepMagicSent'].forEach(s => {
+  ['stepEmail', 'stepOtpCode'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.style.display = s === stepId ? 'block' : 'none';
   });
