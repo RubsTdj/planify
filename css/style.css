@@ -12,13 +12,22 @@
   --radius-sm: 10px;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
   max-width: 480px;
   margin: 0 auto;
+  height: 100%;
+  overflow: hidden;
   overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
 }
 
 #screenApp {
