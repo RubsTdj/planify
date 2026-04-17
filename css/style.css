@@ -12,28 +12,25 @@
   --radius-sm: 10px;
 }
 
-html, body {
+html {
   height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
 }
 
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #screenApp {
-  position: fixed;
-  top: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  height: 100dvh;
   flex-direction: column;
+  height: 100%;
   overflow: hidden;
-  background: var(--bg);
 }
 
 /* Disable double-tap zoom on all interactive elements */
