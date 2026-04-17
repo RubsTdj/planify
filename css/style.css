@@ -27,8 +27,8 @@ body {
 #screenApp {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
