@@ -12,22 +12,43 @@ function showScreen(id) {
 async function initAuth() {
   buildPinPads();
   initOtpInputs();
+
+  const pin = localStorage.getItem('planify_pin');
+
+  // Try to restore session (works even if access token expired — refresh token lasts months)
   const { data: { session } } = await sb.auth.getSession();
+
   if (session) {
+    // Active session — just ask for PIN or biometric
     currentUser = session.user;
-    const pin = localStorage.getItem('planify_pin');
     if (pin) {
       pinMode = 'verify';
       showScreen('screenPin');
       showPinStep('stepPinVerify');
       tryBiometric();
     } else {
-      // First login — go straight to PIN setup
+      // Logged in but no PIN yet (edge case) — set one up
       pinMode = 'setup';
       showScreen('screenPin');
       showPinStep('stepPinSetup');
     }
+  } else if (pin) {
+    // No active session but PIN exists — try silent refresh first
+    const { data: refreshData } = await sb.auth.refreshSession();
+    if (refreshData?.session) {
+      currentUser = refreshData.session.user;
+      pinMode = 'verify';
+      showScreen('screenPin');
+      showPinStep('stepPinVerify');
+      tryBiometric();
+    } else {
+      // Refresh token truly expired (rare, after months) — must re-auth via email
+      // But show a friendly message rather than blank email form
+      showScreen('screenAuth');
+      showAuthStep('stepEmailReauth');
+    }
   } else {
+    // Brand new user — email signup
     showScreen('screenAuth');
     showAuthStep('stepEmail');
   }
@@ -91,6 +112,21 @@ function shakeOtp() {
 function clearOtp() {
   document.querySelectorAll('.otp-digit').forEach(i => { i.value = ''; });
   document.querySelector('.otp-digit')?.focus();
+}
+
+// Re-auth variant (session expired)
+async function sendOtpCodeReauth() {
+  const email = document.getElementById('authEmailReauth').value.trim();
+  if (!email || !email.includes('@')) { showAuthError('Entre une adresse email valide'); return; }
+  const btn = document.getElementById('authReauthBtn');
+  btn.disabled = true; btn.textContent = 'Envoi…';
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+  btn.disabled = false; btn.textContent = 'Envoyer le code';
+  if (error) { showAuthError(error.message); return; }
+  document.getElementById('authEmail').value = email; // reuse same email field for verifyOtp
+  document.getElementById('otpEmailDisplay').textContent = email;
+  showAuthStep('stepOtpCode');
+  setTimeout(() => document.querySelector('.otp-digit')?.focus(), 100);
 }
 
 // OTP digit navigation — auto-advance + backspace
@@ -350,7 +386,7 @@ function buildPinPads() {
 
 // ── Auth screen helpers ───────────────────────────────────────────────────────
 function showAuthStep(stepId) {
-  ['stepEmail', 'stepOtpCode'].forEach(s => {
+  ['stepEmail', 'stepOtpCode', 'stepEmailReauth'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.style.display = s === stepId ? 'block' : 'none';
   });

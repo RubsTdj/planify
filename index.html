@@ -56,24 +56,37 @@
       <h1 class="auth-app-name">Planify</h1>
     </div>
 
-    <!-- Step 1: email entry -->
+    <!-- Step 1: email (première connexion / création compte) -->
     <div id="stepEmail">
-      <h2 class="auth-title">Connexion</h2>
-      <p class="auth-subtitle">Entre ton email pour recevoir un code à 6 chiffres.</p>
+      <h2 class="auth-title">Bienvenue 👋</h2>
+      <p class="auth-subtitle">Entre ton email pour créer ton compte ou te connecter.</p>
       <div class="auth-form">
         <input type="email" id="authEmail" class="auth-input" placeholder="prenom@email.com"
                autocomplete="email" inputmode="email"
                onkeydown="if(event.key==='Enter') sendOtpCode()">
         <div id="authError" class="auth-error" style="display:none;"></div>
-        <button id="authSubmitBtn" class="auth-btn" onclick="sendOtpCode()">Envoyer le code</button>
+        <button id="authSubmitBtn" class="auth-btn" onclick="sendOtpCode()">Continuer</button>
       </div>
     </div>
 
-    <!-- Step 2: OTP code entry -->
+    <!-- Step 1b: re-auth (session expirée après plusieurs mois) -->
+    <div id="stepEmailReauth" style="display:none;">
+      <div class="auth-sent-icon">🔑</div>
+      <h2 class="auth-title">Reconnexion</h2>
+      <p class="auth-subtitle">Ta session a expiré. Entre ton email pour te reconnecter une dernière fois.</p>
+      <div class="auth-form">
+        <input type="email" id="authEmailReauth" class="auth-input" placeholder="prenom@email.com"
+               autocomplete="email" inputmode="email"
+               onkeydown="if(event.key==='Enter') sendOtpCodeReauth()">
+        <button id="authReauthBtn" class="auth-btn" onclick="sendOtpCodeReauth()">Envoyer le code</button>
+      </div>
+    </div>
+
+    <!-- Step 2: saisie du code OTP -->
     <div id="stepOtpCode" style="display:none;">
       <div class="auth-sent-icon">📩</div>
       <h2 class="auth-title">Entre ton code</h2>
-      <p class="auth-subtitle">Un code à 6 chiffres a été envoyé à<br><strong id="otpEmailDisplay"></strong></p>
+      <p class="auth-subtitle">Code à 6 chiffres envoyé à<br><strong id="otpEmailDisplay"></strong></p>
       <div class="otp-row">
         <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
         <input class="otp-digit" type="text" inputmode="numeric" maxlength="1">
