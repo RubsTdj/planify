@@ -125,7 +125,7 @@ function buildChips(dateStr, isBatch) {
       chip.querySelector('.chip-delete').addEventListener('click', function (e) {
         e.stopPropagation();
         e.preventDefault();
-        deletePersoType(t.id, full.label);
+        showDeleteConfirm(chip, t.id, full.label, dateStr, isBatch);
       });
     } else if (!isAdded || isBatch) {
       chip.addEventListener('click', () => addEvent(full.id || t.id, isBatch));
@@ -168,9 +168,33 @@ function toggleManageCustom() {
   buildChips(selectedDate, isBatch);
 }
 
-function deletePersoType(typeId, typeName) {
-  if (!confirm(`Supprimer "${typeName}" ?\n\nCe type sera aussi retiré de tous les jours du calendrier.`)) return;
+function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
+  // Replace chip content with inline confirm buttons
+  const originalHTML = chip.innerHTML;
+  chip.style.animation = 'none';
+  chip.innerHTML = `
+    <span style="font-size:12px;font-weight:700;color:#dc2626;flex:1;">Supprimer ?</span>
+    <button class="confirm-yes" style="padding:4px 10px;border-radius:8px;border:none;background:#dc2626;color:white;font-weight:700;font-size:12px;cursor:pointer;margin-left:6px;">Oui</button>
+    <button class="confirm-no"  style="padding:4px 10px;border-radius:8px;border:none;background:#e5e7eb;color:#374151;font-weight:700;font-size:12px;cursor:pointer;margin-left:4px;">Non</button>`;
 
+  chip.querySelector('.confirm-yes').addEventListener('click', function (e) {
+    e.stopPropagation();
+    deletePersoType(typeId, typeName);
+  });
+  chip.querySelector('.confirm-no').addEventListener('click', function (e) {
+    e.stopPropagation();
+    chip.innerHTML = originalHTML;
+    chip.style.animation = '';
+    // Re-attach delete listener
+    chip.querySelector('.chip-delete').addEventListener('click', function (e2) {
+      e2.stopPropagation();
+      e2.preventDefault();
+      showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch);
+    });
+  });
+}
+
+function deletePersoType(typeId, typeName) {
   for (const dateStr in events) {
     events[dateStr] = events[dateStr].filter(e => e !== typeId);
     if (events[dateStr].length === 0) delete events[dateStr];
