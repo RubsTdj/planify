@@ -62,14 +62,16 @@ button, input, a, [onclick] {
   height: 100%;
   display: flex; flex-direction: column; align-items: center;
   justify-content: space-between;
-  padding: 48px 32px calc(40px + env(safe-area-inset-bottom, 16px));
+  padding: 80px 24px calc(50px + env(safe-area-inset-bottom, 16px));
 }
 .pin-top {
   display: flex; flex-direction: column; align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
+.pin-top .auth-title { color: #1c1c1e; font-size: 22px; font-weight: 600; }
+.pin-top .auth-subtitle { color: #6b6b6b; font-size: 14px; margin-bottom: 0; }
 .pin-bottom {
-  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px;
+  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 
 /* Logo block */
@@ -143,19 +145,19 @@ button, input, a, [onclick] {
 
 /* ── PIN pad ────────────────────────────────────────────────────────────── */
 .pin-dots {
-  display: flex; gap: 18px; justify-content: center;
-  margin: 16px 0 0;
+  display: flex; gap: 20px; justify-content: center;
+  margin: 20px 0 0;
 }
 .pin-dot {
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 2px solid #c4b5fd;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid #8e8e93;
   background: transparent;
-  transition: background 0.15s, transform 0.15s;
+  transition: background 0.12s, transform 0.12s;
 }
 .pin-dot.filled {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border-color: transparent;
-  transform: scale(1.2);
+  background: #1c1c1e;
+  border-color: #1c1c1e;
+  transform: scale(1.1);
 }
 .pin-dots.shake { animation: pinShake 0.4s ease; }
 @keyframes pinShake {
@@ -166,36 +168,46 @@ button, input, a, [onclick] {
   80%      { transform: translateX(6px); }
 }
 
-/* PIN numpad */
+/* PIN screen background */
+#screenPin { background: #f2f2f7; } /* iOS system grey */
+
+/* PIN numpad — iOS native circle style */
 .pin-pad {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  width: 100%;
-  max-width: 340px;
+  grid-template-columns: repeat(3, 76px);
+  grid-auto-rows: 76px;
+  gap: 18px;
+  justify-content: center;
 }
 .pin-key {
-  height: 82px; border-radius: 20px;
-  border: 1.5px solid var(--border);
-  background: var(--card);
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  border: none;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
   font-family: 'Inter', sans-serif;
-  font-size: 28px; font-weight: 500; color: var(--text);
+  font-size: 28px; font-weight: 400; color: #000;
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px;
-  transition: background 0.1s, transform 0.1s;
+  gap: 0px;
+  transition: background 0.08s;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation; /* disables double-tap zoom */
+  touch-action: manipulation;
 }
-.pin-key:active { background: #eef2ff; transform: scale(0.92); }
+.pin-key:active { background: #b0b0b8; box-shadow: none; }
 .pin-key .pin-key-sub {
-  font-size: 9px; font-weight: 600; letter-spacing: 1.2px;
-  color: var(--text-secondary); text-transform: uppercase;
+  font-size: 8px; font-weight: 500; letter-spacing: 1.5px;
+  color: #6b6b6b; text-transform: uppercase;
+  margin-top: 1px;
 }
-.pin-key.del { font-size: 22px; border-color: transparent; background: transparent; }
-.pin-key.empty { border: none; background: transparent; cursor: default; }
-.pin-key.empty:active { transform: none; }
+.pin-key.del {
+  background: transparent; box-shadow: none;
+  font-size: 22px; color: #000;
+}
+.pin-key.del:active { background: rgba(0,0,0,0.08); }
+.pin-key.empty { background: transparent; box-shadow: none; cursor: default; }
+.pin-key.empty:active { background: transparent; }
 
 /* ── Header ── */
 .header {
