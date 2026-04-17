@@ -307,7 +307,7 @@ function updateBatchUI() {
   } else {
     counter.classList.remove('visible');
     bottomBar.innerHTML = `
-      <button class="batch-btn" onclick="toggleBatchMode()">⚡ Multi-select</button>
-      <button class="batch-btn today-btn" onclick="goToday()">📍 Aujourd'hui</button>`;
+      <button class="batch-btn today-btn" onclick="goToday()">📍 Aujourd'hui</button>
+      <button class="batch-btn multiselect-btn" onclick="toggleBatchMode()">⚡ Multi-select</button>`;
   }
 }

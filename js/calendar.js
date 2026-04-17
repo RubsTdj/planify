@@ -2,44 +2,72 @@ let currentMonth, currentYear;
 let events = {};
 let animatedTags = {};
 
+// Colour used for dot indicators per event type
+const DOT_COLORS = {
+  matin:    '#fbbf24',
+  soir:     '#a78bfa',
+  nuit:     '#818cf8',
+  repos:    '#34d399',
+  vacances: '#22d3ee',
+  custom:   '#9ca3af',
+};
+
+function getDotColor(typeId) {
+  if (DOT_COLORS[typeId]) return DOT_COLORS[typeId];
+  return DOT_COLORS.custom;
+}
+
 function formatDate(y, m, d) {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
 function render() {
-  document.getElementById('monthTitle').textContent = `${MONTHS_FR[currentMonth]} ${currentYear}`;
+  // Split month / year for styled title
+  const monthEl = document.getElementById('monthLabel');
+  const yearEl  = document.getElementById('yearLabel');
+  if (monthEl) monthEl.textContent = MONTHS_FR[currentMonth];
+  if (yearEl)  yearEl.textContent  = currentYear;
+
   renderCalendar();
+  renderEmptyState();
   updateBatchUI();
 }
 
 function renderCalendar() {
   const grid = document.getElementById('calendarGrid');
   grid.innerHTML = '';
-  const firstDay  = new Date(currentYear, currentMonth, 1);
-  let startDay    = firstDay.getDay() - 1;
+  const firstDay   = new Date(currentYear, currentMonth, 1);
+  let startDay     = firstDay.getDay() - 1;
   if (startDay < 0) startDay = 6;
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const today = new Date();
 
   for (let i = 0; i < startDay; i++) {
-    grid.innerHTML += '<div class="day-cell empty"></div>';
+    const empty = document.createElement('div');
+    empty.className = 'day-cell empty';
+    grid.appendChild(empty);
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr  = formatDate(currentYear, currentMonth, d);
-    const isToday  = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === d;
-    const isPast   = new Date(currentYear, currentMonth, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const dateStr   = formatDate(currentYear, currentMonth, d);
+    const dow       = new Date(currentYear, currentMonth, d).getDay(); // 0=Sun,6=Sat
+    const isWeekend = dow === 0 || dow === 6;
+    const isToday   = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === d;
+    const isPast    = new Date(currentYear, currentMonth, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const isSelected = batchSelected.has(dateStr);
     const dayEvents  = events[dateStr] || [];
 
     let classes = 'day-cell';
+    if (isWeekend)  classes += ' weekend';
     if (isToday)    classes += ' today';
     if (isPast)     classes += ' past';
     if (isSelected) classes += ' selected';
 
-    const maxShow = 3;
+    // Show up to 2 tags, then dots for the rest
+    const maxTags = 2;
     let eventsHTML = '';
-    dayEvents.slice(0, maxShow).forEach((evtId, i) => {
+
+    dayEvents.slice(0, maxTags).forEach((evtId, i) => {
       const type = getEventType(evtId);
       if (!type) return;
       const tagClass = type.tagClass || 'tag-custom';
@@ -55,8 +83,14 @@ function renderCalendar() {
         <span class="tag-label">${type.label}</span>
       </div>`;
     });
-    if (dayEvents.length > maxShow) {
-      eventsHTML += `<span class="event-overflow">+${dayEvents.length - maxShow}</span>`;
+
+    // Dots for overflow events
+    if (dayEvents.length > maxTags) {
+      const overflowDots = dayEvents.slice(maxTags).map(evtId => {
+        const color = getDotColor(evtId);
+        return `<span class="day-dot" style="background:${color}"></span>`;
+      }).join('');
+      eventsHTML += `<div class="day-dots">${overflowDots}</div>`;
     }
 
     const cell = document.createElement('div');
@@ -65,6 +99,29 @@ function renderCalendar() {
     cell.innerHTML    = `<span class="day-number">${d}</span><div class="day-events">${eventsHTML}</div>`;
     cell.addEventListener('click', () => handleDayClick(dateStr));
     grid.appendChild(cell);
+  }
+}
+
+function renderEmptyState() {
+  const container = document.getElementById('calendarContainer');
+  const existing  = document.getElementById('emptyState');
+
+  // Check if current month has any events
+  const hasEvents = Object.keys(events).some(d => d.startsWith(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`));
+
+  if (!hasEvents) {
+    if (!existing) {
+      const el = document.createElement('div');
+      el.id        = 'emptyState';
+      el.className = 'empty-state';
+      el.innerHTML = `
+        <div class="empty-state-icon">🗓️</div>
+        <h3>Mois vide</h3>
+        <p>Appuie sur un jour pour ajouter ton premier shift ou événement ✨</p>`;
+      container.appendChild(el);
+    }
+  } else {
+    if (existing) existing.remove();
   }
 }
 

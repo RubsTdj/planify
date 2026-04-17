@@ -32,13 +32,17 @@
 
 <div class="month-nav">
   <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
-  <h2 id="monthTitle"></h2>
+  <h2>
+    <span class="month-label" id="monthLabel"></span>
+    <span class="year-label" id="yearLabel"></span>
+  </h2>
   <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
 </div>
 
-<div class="calendar-container">
+<div class="calendar-container" id="calendarContainer">
   <div class="weekday-header">
-    <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+    <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span>
+    <span class="weekend">Sam</span><span class="weekend">Dim</span>
   </div>
   <div class="calendar-grid" id="calendarGrid"></div>
   <div class="print-legend" id="printLegend"></div>
