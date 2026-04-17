@@ -14,23 +14,23 @@
 <!-- Full-screen loader shown while fetching data from Supabase -->
 <div id="appLoader">
   <div class="loader-inner">
-    <svg class="loader-logo-svg" width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="72" height="72" rx="20" fill="url(#grad-loader)"/>
-      <circle cx="26" cy="30" r="4" fill="white" fill-opacity="0.5"/>
-      <circle cx="36" cy="30" r="4" fill="white" fill-opacity="0.5"/>
-      <circle cx="46" cy="30" r="4" fill="white" fill-opacity="0.5"/>
-      <circle cx="26" cy="44" r="4" fill="white" fill-opacity="0.5"/>
-      <circle cx="36" cy="44" r="4" fill="white" fill-opacity="0.5"/>
-      <circle cx="46" cy="44" r="6" fill="white"/>
+    <svg class="loader-logo-svg" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="80" height="80" rx="22" fill="url(#grad-loader)"/>
+      <!-- 5 regular dots — pulse in sequence left-to-right, top-to-bottom -->
+      <circle class="ld ld1" cx="28" cy="32" r="4" fill="white" fill-opacity="0.5"/>
+      <circle class="ld ld2" cx="40" cy="32" r="4" fill="white" fill-opacity="0.5"/>
+      <circle class="ld ld3" cx="52" cy="32" r="4" fill="white" fill-opacity="0.5"/>
+      <circle class="ld ld4" cx="28" cy="48" r="4" fill="white" fill-opacity="0.5"/>
+      <circle class="ld ld5" cx="40" cy="48" r="4" fill="white" fill-opacity="0.5"/>
+      <!-- Today dot — bigger, white, stronger pulse -->
+      <circle class="ld ld6 ld-today" cx="52" cy="48" r="6" fill="white"/>
       <defs>
-        <linearGradient id="grad-loader" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+        <linearGradient id="grad-loader" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
           <stop stop-color="#6366f1"/>
           <stop offset="1" stop-color="#8b5cf6"/>
         </linearGradient>
       </defs>
     </svg>
-    <div class="loader-spinner"></div>
-    <p>Chargement…</p>
   </div>
 </div>
 
