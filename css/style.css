@@ -20,14 +20,15 @@ body {
   max-width: 480px;
   margin: 0 auto;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden; /* no scroll on body — app fills viewport exactly */
 }
 
-/* screenApp uses flex layout */
+/* screenApp uses flex layout, locked to viewport */
 #screenApp {
   display: flex;
   flex-direction: column;
   height: 100dvh;
+  overflow: hidden;
 }
 
 /* ── Auth & PIN screens ───────────────────────────────────────────────── */
