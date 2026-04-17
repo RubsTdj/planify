@@ -262,10 +262,12 @@ body {
 /* ── Calendar grid ── */
 .calendar-container {
   padding: 0 4px;
+  padding-bottom: calc(78px + env(safe-area-inset-bottom, 16px)); /* room for fixed bottom bar */
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 1px; margin-bottom: 6px; }
 .weekday-header span { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 0; }
@@ -601,7 +603,7 @@ body {
 }
 
 /* ── Misc ── */
-.bottom-spacer { height: calc(80px + env(safe-area-inset-bottom, 16px)); }
+.bottom-spacer { display: none; } /* bottom-bar is fixed, no spacer needed */
 ::-webkit-scrollbar { width: 0; }
 
 /* ── Print ── */
