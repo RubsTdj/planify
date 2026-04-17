@@ -9,14 +9,8 @@ const EVENT_TYPES = [
   { id: 'vacances', label: 'Vacances', emoji: '🏖️',                                        cssClass: 'vacances', tagClass: 'tag-vacances', category: 'vacation', allDay: true  },
 ];
 
-const DEFAULT_PRESETS = [
-  { id: 'preset_paris',         label: 'Paris',         emoji: '🗼', allDay: true,  duration: 'allday' },
-  { id: 'preset_physio',        label: 'Physio',        emoji: '💪', allDay: true,  duration: 'allday' },
-  { id: 'preset_coiffeur',      label: 'Coiffeur',      emoji: '💇', allDay: false, duration: 'half', halfDay: 'morning', startTime: '08:00', endTime: '12:00' },
-  { id: 'preset_estheticienne', label: 'Esthéticienne', emoji: '✨', allDay: false, duration: 'half', halfDay: 'morning', startTime: '08:00', endTime: '12:00' },
-  { id: 'preset_manucure',      label: 'Manucure',      emoji: '💅', allDay: false, duration: 'half', halfDay: 'morning', startTime: '08:00', endTime: '12:00' },
-  { id: 'preset_formation',     label: 'Formation',     emoji: '📋', allDay: true,  duration: 'allday' },
-];
+// Populated at runtime from Supabase custom_types (preset_ rows)
+const DEFAULT_PRESETS = [];
 
 const EMOJI_OPTIONS = ['📋','🏃','💊','🧘','🎓','🚗','🛒','🎂','❤️','🔔','💈','📞','🏠','🎉','☕','🍴','🗼','💪','✨','💅','🐶','🎵','📚','✈️'];
 

@@ -12,9 +12,10 @@ create table if not exists public.events (
 );
 
 -- ─── custom_types ─────────────────────────────────────────────────────────────
--- User-created event types (also stores "removed presets" as is_deleted=true).
+-- All perso event types: presets (id starts with 'preset_') + user-created (id starts with 'custom_').
+-- is_deleted is kept for soft-delete safety but hard deletes are used in practice.
 create table if not exists public.custom_types (
-  id          text        primary key,   -- 'custom_<timestamp>' or 'preset_xxx'
+  id          text        primary key,   -- 'preset_xxx' or 'custom_<timestamp>'
   label       text        not null,
   emoji       text        not null,
   duration    text        not null default 'allday',  -- 'allday' | 'half' | 'custom'
@@ -22,9 +23,19 @@ create table if not exists public.custom_types (
   half_day    text,                                    -- 'morning' | 'afternoon'
   start_time  text,
   end_time    text,
-  is_deleted  boolean     not null default false,      -- true = removed preset
+  is_deleted  boolean     not null default false,
   created_at  timestamptz not null default now()
 );
+
+-- ─── Seed default presets ──────────────────────────────────────────────────────
+insert into public.custom_types (id, label, emoji, duration, all_day, half_day, start_time, end_time) values
+  ('preset_paris',         'Paris',         '🗼', 'allday', true,  null,      null,    null),
+  ('preset_physio',        'Physio',        '💪', 'allday', true,  null,      null,    null),
+  ('preset_coiffeur',      'Coiffeur',      '💇', 'half',   false, 'morning', '08:00', '12:00'),
+  ('preset_estheticienne', 'Esthéticienne', '✨', 'half',   false, 'morning', '08:00', '12:00'),
+  ('preset_manucure',      'Manucure',      '💅', 'half',   false, 'morning', '08:00', '12:00'),
+  ('preset_formation',     'Formation',     '📋', 'allday', true,  null,      null,    null)
+on conflict (id) do nothing;
 
 -- ─── Row Level Security (open – no auth for now) ───────────────────────────
 alter table public.events      enable row level security;
