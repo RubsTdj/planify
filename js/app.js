@@ -13,8 +13,11 @@ async function init() {
   showLoader();
   buildEmojiPicker();
 
-  // Load data from Supabase (async)
-  await loadData();
+  // Load data + ensure loader shows for at least 2s to enjoy the animation
+  const [_] = await Promise.all([
+    loadData(),
+    new Promise(r => setTimeout(r, 2000)),
+  ]);
 
   hideLoader();
   render();
