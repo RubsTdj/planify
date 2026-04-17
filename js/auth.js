@@ -1,0 +1,271 @@
+// ── Auth state ────────────────────────────────────────────────────────────────
+let currentUser = null;
+
+// ── Screen management ─────────────────────────────────────────────────────────
+function showScreen(id) {
+  ['screenAuth', 'screenPin', 'screenApp'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'flex' : 'none';
+  });
+}
+
+// ── Entry point called by app.js ─────────────────────────────────────────────
+async function initAuth() {
+  buildPinPads();
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    const pin = localStorage.getItem('planify_pin');
+    if (pin) {
+      pinMode = 'verify';
+      showScreen('screenPin');
+      showPinStep('stepPinVerify');
+      tryBiometric();
+    } else {
+      // First login — go straight to PIN setup
+      pinMode = 'setup';
+      showScreen('screenPin');
+      showPinStep('stepPinSetup');
+    }
+  } else {
+    showScreen('screenAuth');
+    showAuthStep('stepEmail');
+  }
+  return false;
+}
+
+// ── Email Magic Link auth ─────────────────────────────────────────────────────
+async function sendMagicLink() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email || !email.includes('@')) { showAuthError('Entre une adresse email valide'); return; }
+
+  setAuthLoading(true);
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  setAuthLoading(false);
+
+  if (error) { showAuthError(error.message); return; }
+  showAuthStep('stepMagicSent');
+}
+
+// Listen for auth state changes (magic link callback)
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    currentUser = session.user;
+    const pin = localStorage.getItem('planify_pin');
+    if (!pin) {
+      pinMode = 'setup';
+      showScreen('screenPin');
+      showPinStep('stepPinSetup');
+    } else {
+      await launchApp();
+    }
+  }
+});
+
+// ── PIN setup & verification ──────────────────────────────────────────────────
+let pinBuffer = '';
+let pinMode   = 'setup'; // 'setup' | 'confirm' | 'verify'
+let pinFirst  = '';
+
+function showPinStep(stepId) {
+  ['stepPinSetup', 'stepPinConfirm', 'stepPinVerify'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.style.display = s === stepId ? 'block' : 'none';
+  });
+  pinBuffer = '';
+  updatePinDots();
+}
+
+function pinKey(val) {
+  if (pinBuffer.length >= 6) return;
+  if (val === 'del') {
+    pinBuffer = pinBuffer.slice(0, -1);
+  } else {
+    pinBuffer += val;
+  }
+  updatePinDots();
+
+  if (pinBuffer.length === 6) {
+    setTimeout(() => handlePinComplete(), 120);
+  }
+}
+
+function updatePinDots() {
+  const activeStep = pinMode === 'verify' ? 'stepPinVerify' : (pinMode === 'confirm' ? 'stepPinConfirm' : 'stepPinSetup');
+  const dots = document.querySelectorAll(`#${activeStep} .pin-dot`);
+  dots.forEach((d, i) => {
+    d.classList.toggle('filled', i < pinBuffer.length);
+  });
+}
+
+function handlePinComplete() {
+  if (pinMode === 'setup') {
+    pinFirst = pinBuffer;
+    pinMode  = 'confirm';
+    showPinStep('stepPinConfirm');
+  } else if (pinMode === 'confirm') {
+    if (pinBuffer === pinFirst) {
+      localStorage.setItem('planify_pin', pinBuffer);
+      pinMode = 'verify';
+      registerBiometric().then(() => launchApp());
+    } else {
+      shakePinDots('stepPinConfirm');
+      setTimeout(() => { pinMode = 'setup'; pinFirst = ''; showPinStep('stepPinSetup'); }, 600);
+    }
+  } else if (pinMode === 'verify') {
+    const saved = localStorage.getItem('planify_pin');
+    if (pinBuffer === saved) {
+      launchApp();
+    } else {
+      shakePinDots('stepPinVerify');
+      pinBuffer = '';
+      updatePinDots();
+    }
+  }
+}
+
+function shakePinDots(stepId) {
+  const row = document.querySelector(`#${stepId} .pin-dots`);
+  if (!row) return;
+  row.classList.add('shake');
+  setTimeout(() => row.classList.remove('shake'), 500);
+}
+
+// ── Biometric (Face ID / Touch ID via WebAuthn) ───────────────────────────────
+async function registerBiometric() {
+  if (!window.PublicKeyCredential) return;
+  try {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp:        { name: 'Planify' },
+        user: {
+          id:          new TextEncoder().encode(currentUser.id),
+          name:        currentUser.email,
+          displayName: currentUser.email,
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification:        'required',
+        },
+        timeout: 30000,
+      },
+    });
+    // Store credential id for later verification
+    localStorage.setItem('planify_cred_id', btoa(String.fromCharCode(...new Uint8Array(cred.rawId))));
+  } catch (e) {
+    // User declined biometric — silently skip
+  }
+}
+
+async function tryBiometric() {
+  const credId = localStorage.getItem('planify_cred_id');
+  if (!window.PublicKeyCredential || !credId) return;
+  try {
+    const rawId = Uint8Array.from(atob(credId), c => c.charCodeAt(0));
+    await navigator.credentials.get({
+      publicKey: {
+        challenge:        crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ type: 'public-key', id: rawId }],
+        userVerification: 'required',
+        timeout:          30000,
+      },
+    });
+    // Biometric passed
+    launchApp();
+  } catch (e) {
+    // Biometric failed/cancelled — show PIN instead
+    pinMode = 'verify';
+    showPinStep('stepPinVerify');
+  }
+}
+
+// ── Launch app after auth ─────────────────────────────────────────────────────
+async function launchApp() {
+  showScreen('screenApp');
+  showLoader();
+  buildEmojiPicker();
+  const [_] = await Promise.all([
+    loadData(),
+    new Promise(r => setTimeout(r, 2500)),
+  ]);
+  hideLoader();
+  render();
+  document.getElementById('overlay').addEventListener('click', closeAllSheets);
+  document.getElementById('manageCustomBtn').addEventListener('click', toggleManageCustom);
+  initSwipeToClose(document.getElementById('eventSheet'),  closeSheet);
+  initSwipeToClose(document.getElementById('customSheet'), closeCustomSheet);
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  localStorage.removeItem('planify_pin');
+  localStorage.removeItem('planify_cred_id');
+  currentUser = null;
+  events = {};
+  customTypes = [];
+  showScreen('screenAuth');
+  showAuthStep('stepEmail');
+}
+
+// ── Build PIN numpad ─────────────────────────────────────────────────────────
+function buildPinPads() {
+  const keys = [
+    ['1',''],['2','ABC'],['3','DEF'],
+    ['4','GHI'],['5','JKL'],['6','MNO'],
+    ['7','PQRS'],['8','TUV'],['9','WXYZ'],
+    ['empty',''],['0',''],['del','⌫'],
+  ];
+  ['pinPadSetup','pinPadConfirm','pinPadVerify'].forEach(id => {
+    const pad = document.getElementById(id);
+    if (!pad) return;
+    pad.innerHTML = '';
+    keys.forEach(([val, sub]) => {
+      const btn = document.createElement('button');
+      if (val === 'empty') {
+        btn.className = 'pin-key empty';
+      } else if (val === 'del') {
+        btn.className = 'pin-key del';
+        btn.textContent = '⌫';
+        btn.addEventListener('click', () => pinKey('del'));
+      } else {
+        btn.className = 'pin-key';
+        btn.innerHTML = `${val}${sub ? `<span class="pin-key-sub">${sub}</span>` : ''}`;
+        btn.addEventListener('click', () => pinKey(val));
+      }
+      pad.appendChild(btn);
+    });
+  });
+
+  // Show biometric button if credential registered
+  const bioBtn = document.getElementById('biometricBtn');
+  if (bioBtn && localStorage.getItem('planify_cred_id') && window.PublicKeyCredential) {
+    bioBtn.style.display = 'inline-flex';
+    // Detect Face ID vs Touch ID by platform
+    const isIOS = /iPhone|iPad/.test(navigator.userAgent);
+    document.getElementById('biometricIcon').textContent = isIOS ? '🔒' : '🔒';
+  }
+}
+
+// ── Auth screen helpers ───────────────────────────────────────────────────────
+function showAuthStep(stepId) {
+  ['stepEmail', 'stepMagicSent'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.style.display = s === stepId ? 'block' : 'none';
+  });
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+function setAuthLoading(on) {
+  const btn = document.getElementById('authSubmitBtn');
+  if (!btn) return;
+  btn.disabled    = on;
+  btn.textContent = on ? 'Envoi…' : 'Continuer';
+}

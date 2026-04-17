@@ -10,190 +10,291 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Planify">
   <link rel="stylesheet" href="css/style.css">
-  <!-- Supabase JS client (CDN, no build step) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
-<!-- Full-screen loader shown while fetching data from Supabase -->
+<!-- ── Loader ──────────────────────────────────────────────────────────────── -->
 <div id="appLoader">
   <div class="loader-inner">
     <svg class="loader-logo-svg" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="80" height="80" rx="22" fill="url(#grad-loader)"/>
-      <!-- 5 regular dots — pulse in sequence left-to-right, top-to-bottom -->
       <circle class="ld ld1" cx="28" cy="32" r="4" fill="white" fill-opacity="0.5"/>
       <circle class="ld ld2" cx="40" cy="32" r="4" fill="white" fill-opacity="0.5"/>
       <circle class="ld ld3" cx="52" cy="32" r="4" fill="white" fill-opacity="0.5"/>
       <circle class="ld ld4" cx="28" cy="48" r="4" fill="white" fill-opacity="0.5"/>
       <circle class="ld ld5" cx="40" cy="48" r="4" fill="white" fill-opacity="0.5"/>
-      <!-- Today dot — bigger, white, stronger pulse -->
       <circle class="ld ld6 ld-today" cx="52" cy="48" r="6" fill="white"/>
       <defs>
         <linearGradient id="grad-loader" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#6366f1"/>
-          <stop offset="1" stop-color="#8b5cf6"/>
+          <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
         </linearGradient>
       </defs>
     </svg>
   </div>
 </div>
 
-<div class="header">
-  <div class="header-logo">
-    <!-- Logo mark: minimal calendar grid -->
-    <svg class="logo-mark" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="36" height="36" rx="10" fill="url(#grad-logo)"/>
-      <!-- 6 dots: 3 cols × 2 rows, centered -->
-      <circle cx="13" cy="15" r="2" fill="white" fill-opacity="0.5"/>
-      <circle cx="18" cy="15" r="2" fill="white" fill-opacity="0.5"/>
-      <circle cx="23" cy="15" r="2" fill="white" fill-opacity="0.5"/>
-      <circle cx="13" cy="22" r="2" fill="white" fill-opacity="0.5"/>
-      <circle cx="18" cy="22" r="2" fill="white" fill-opacity="0.5"/>
-      <!-- Today dot: filled white, slightly bigger -->
-      <circle cx="23" cy="22" r="3" fill="white"/>
-      <defs>
-        <linearGradient id="grad-logo" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#6366f1"/>
-          <stop offset="1" stop-color="#8b5cf6"/>
-        </linearGradient>
-      </defs>
-    </svg>
-    <!-- Wordmark -->
-    <span class="logo-wordmark">Planify</span>
-  </div>
-  <div class="header-actions">
-    <button class="header-btn" onclick="printCalendar()" title="Imprimer">🖨️</button>
-    <button class="header-btn" onclick="exportICS()" title="Exporter .ics">📅</button>
-  </div>
-</div>
-
-<div class="month-nav">
-  <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
-  <h2>
-    <span class="month-label" id="monthLabel"></span>
-    <span class="year-label" id="yearLabel"></span>
-  </h2>
-  <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
-</div>
-
-<div class="calendar-container" id="calendarContainer">
-  <div class="weekday-header">
-    <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span>
-    <span class="weekend">Sam</span><span class="weekend">Dim</span>
-  </div>
-  <div class="calendar-grid" id="calendarGrid"></div>
-  <div class="print-legend" id="printLegend"></div>
-  <div class="print-header">Planify — généré le <span id="printDate"></span></div>
-</div>
-
-<div class="bottom-spacer"></div>
-<div class="batch-counter" id="batchCounter"></div>
-<div id="toast" class="toast"></div>
-
-<div class="bottom-bar" id="bottomBar">
-  <button class="batch-btn" onclick="toggleBatchMode()">⚡ Multi-select</button>
-  <button class="batch-btn today-btn" onclick="goToday()">📍 Aujourd'hui</button>
-</div>
-
-<div class="overlay" id="overlay"></div>
-
-<!-- Event picker sheet -->
-<div class="bottom-sheet" id="eventSheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-header">
-    <h3 id="sheetTitle">Choisir un événement</h3>
-    <div class="sheet-date" id="sheetDate"></div>
-  </div>
-  <div class="sheet-current" id="sheetCurrent" style="display:none;">
-    <div class="sheet-current-title">Sur ce jour</div>
-    <div id="currentEventsList"></div>
-  </div>
-  <div class="sheet-divider" id="sheetDivider" style="display:none;"></div>
-  <div class="sheet-section">
-    <div class="sheet-section-title">Travail</div>
-    <div class="sheet-grid" id="workChips"></div>
-  </div>
-  <div class="sheet-section">
-    <div class="sheet-section-title">Repos</div>
-    <div class="sheet-grid" id="offChips"></div>
-  </div>
-  <div class="sheet-section">
-    <div class="sheet-section-title">Vacances</div>
-    <div class="sheet-grid" id="vacationChips"></div>
-  </div>
-  <div class="sheet-section">
-    <div class="sheet-section-title">Perso</div>
-    <div class="sheet-grid" id="customChips"></div>
-    <button class="manage-custom-btn" id="manageCustomBtn" style="display:none;">🗑️ Gérer mes types</button>
-  </div>
-  <div style="height: 24px;"></div>
-</div>
-
-<!-- Custom event creation sheet -->
-<div class="bottom-sheet" id="customSheet">
-  <div class="sheet-handle"></div>
-  <div class="modal-content">
-    <h3>✨ Nouvel événement</h3>
-    <div class="form-group">
-      <label>Nom</label>
-      <input type="text" class="form-input" id="customName" placeholder="Ex: Formation, RDV...">
+<!-- ── Auth screen ─────────────────────────────────────────────────────────── -->
+<div id="screenAuth" class="auth-screen" style="display:none;">
+  <div class="auth-inner">
+    <!-- Logo -->
+    <div class="auth-logo">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="18" fill="url(#ga)"/>
+        <circle cx="23" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
+        <circle cx="32" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
+        <circle cx="41" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
+        <circle cx="23" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
+        <circle cx="32" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
+        <circle cx="41" cy="39" r="5.5" fill="white"/>
+        <defs>
+          <linearGradient id="ga" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1 class="auth-app-name">Planify</h1>
     </div>
-    <div class="form-group">
-      <label>Emoji</label>
-      <div class="emoji-picker" id="emojiPicker"></div>
+
+    <!-- Step 1: email entry -->
+    <div id="stepEmail">
+      <h2 class="auth-title">Connexion</h2>
+      <p class="auth-subtitle">Entre ton email pour recevoir un lien magique de connexion.</p>
+      <div class="auth-form">
+        <input type="email" id="authEmail" class="auth-input" placeholder="prenom@email.com"
+               autocomplete="email" inputmode="email"
+               onkeydown="if(event.key==='Enter') sendMagicLink()">
+        <div id="authError" class="auth-error" style="display:none;"></div>
+        <button id="authSubmitBtn" class="auth-btn" onclick="sendMagicLink()">Continuer</button>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Durée</label>
-      <div class="duration-selector">
-        <div class="duration-option active" data-dur="allday" onclick="selectDuration('allday', this)">
-          <span class="dur-emoji">📅</span>
-          <span class="dur-label">Journée</span>
-          <span class="dur-desc">Toute la journée</span>
-        </div>
-        <div class="duration-option" data-dur="half" onclick="selectDuration('half', this)">
-          <span class="dur-emoji">🕐</span>
-          <span class="dur-label">Demi-journée</span>
-          <span class="dur-desc">Matin ou après-midi</span>
-        </div>
-        <div class="duration-option" data-dur="custom" onclick="selectDuration('custom', this)">
-          <span class="dur-emoji">⏰</span>
-          <span class="dur-label">Horaires</span>
-          <span class="dur-desc">Début / fin</span>
-        </div>
+
+    <!-- Step 2: magic link sent confirmation -->
+    <div id="stepMagicSent" style="display:none;">
+      <div class="auth-sent-icon">📬</div>
+      <h2 class="auth-title">Vérifie tes emails</h2>
+      <p class="auth-subtitle">Un lien de connexion t'a été envoyé. Clique dessus depuis ton téléphone pour accéder à l'app.</p>
+      <button class="auth-btn-ghost" onclick="showAuthStep('stepEmail')">← Changer l'email</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PIN screen ──────────────────────────────────────────────────────────── -->
+<div id="screenPin" class="auth-screen" style="display:none;">
+  <div class="auth-inner">
+
+    <!-- Setup -->
+    <div id="stepPinSetup">
+      <h2 class="auth-title">Crée ton code</h2>
+      <p class="auth-subtitle">6 chiffres pour sécuriser l'accès à ton planning.</p>
+      <div class="pin-dots">
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
       </div>
-      <div class="half-day-selector" id="halfDaySelector">
-        <div class="half-day-option active" data-half="morning" onclick="selectHalfDay('morning', this)">
-          <span class="dur-emoji">☀️</span>
-          <span class="dur-label">Matin</span>
-          <span class="dur-desc">8h → 12h</span>
-        </div>
-        <div class="half-day-option" data-half="afternoon" onclick="selectHalfDay('afternoon', this)">
-          <span class="dur-emoji">🌅</span>
-          <span class="dur-label">Après-midi</span>
-          <span class="dur-desc">13h → 18h</span>
-        </div>
+      <div class="pin-pad" id="pinPadSetup"></div>
+    </div>
+
+    <!-- Confirm -->
+    <div id="stepPinConfirm" style="display:none;">
+      <h2 class="auth-title">Confirme ton code</h2>
+      <p class="auth-subtitle">Entre à nouveau les 6 chiffres.</p>
+      <div class="pin-dots">
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
       </div>
-      <div class="time-row-container" id="timeRowContainer">
-        <div class="time-row">
-          <div class="form-group">
-            <label>Début</label>
-            <input type="time" class="form-input" id="customStart">
+      <div class="pin-pad" id="pinPadConfirm"></div>
+    </div>
+
+    <!-- Verify (returning user) -->
+    <div id="stepPinVerify" style="display:none;">
+      <div class="auth-logo" style="margin-bottom:24px;">
+        <svg width="52" height="52" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="18" fill="url(#gv)"/>
+          <circle cx="23" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
+          <circle cx="32" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
+          <circle cx="41" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
+          <circle cx="23" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
+          <circle cx="32" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
+          <circle cx="41" cy="39" r="5.5" fill="white"/>
+          <defs>
+            <linearGradient id="gv" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1 class="auth-app-name">Planify</h1>
+      </div>
+      <h2 class="auth-title">Bon retour 👋</h2>
+      <div class="pin-dots">
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+      </div>
+      <div class="pin-pad" id="pinPadVerify"></div>
+      <button class="auth-btn-ghost" id="biometricBtn" onclick="tryBiometric()" style="display:none;">
+        <span id="biometricIcon">🔒</span> Face ID / Touch ID
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── App ─────────────────────────────────────────────────────────────────── -->
+<div id="screenApp" style="display:none; flex-direction:column; height:100dvh;">
+
+  <div class="header">
+    <div class="header-logo">
+      <svg class="logo-mark" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="10" fill="url(#grad-logo)"/>
+        <circle cx="13" cy="15" r="2" fill="white" fill-opacity="0.5"/>
+        <circle cx="18" cy="15" r="2" fill="white" fill-opacity="0.5"/>
+        <circle cx="23" cy="15" r="2" fill="white" fill-opacity="0.5"/>
+        <circle cx="13" cy="22" r="2" fill="white" fill-opacity="0.5"/>
+        <circle cx="18" cy="22" r="2" fill="white" fill-opacity="0.5"/>
+        <circle cx="23" cy="22" r="3" fill="white"/>
+        <defs>
+          <linearGradient id="grad-logo" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="logo-wordmark">Planify</span>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" onclick="printCalendar()" title="Imprimer">🖨️</button>
+      <button class="header-btn" onclick="exportICS()" title="Exporter .ics">📅</button>
+      <button class="header-btn" onclick="signOut()" title="Déconnexion">👤</button>
+    </div>
+  </div>
+
+  <div class="month-nav">
+    <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
+    <h2>
+      <span class="month-label" id="monthLabel"></span>
+      <span class="year-label" id="yearLabel"></span>
+    </h2>
+    <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
+  </div>
+
+  <div class="calendar-container" id="calendarContainer">
+    <div class="weekday-header">
+      <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span>
+      <span class="weekend">Sam</span><span class="weekend">Dim</span>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="print-legend" id="printLegend"></div>
+    <div class="print-header">Planify — généré le <span id="printDate"></span></div>
+  </div>
+
+  <div class="bottom-spacer"></div>
+  <div class="batch-counter" id="batchCounter"></div>
+  <div id="toast" class="toast"></div>
+
+  <div class="bottom-bar" id="bottomBar">
+    <button class="batch-btn today-btn" onclick="goToday()">📍 Aujourd'hui</button>
+    <button class="batch-btn multiselect-btn" onclick="toggleBatchMode()">⚡ Multi-select</button>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Event picker sheet -->
+  <div class="bottom-sheet" id="eventSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="sheetTitle">Choisir un événement</h3>
+      <div class="sheet-date" id="sheetDate"></div>
+    </div>
+    <div class="sheet-current" id="sheetCurrent" style="display:none;">
+      <div class="sheet-current-title">Sur ce jour</div>
+      <div id="currentEventsList"></div>
+    </div>
+    <div class="sheet-divider" id="sheetDivider" style="display:none;"></div>
+    <div class="sheet-section">
+      <div class="sheet-section-title">Travail</div>
+      <div class="sheet-grid" id="workChips"></div>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-section-title">Repos</div>
+      <div class="sheet-grid" id="offChips"></div>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-section-title">Vacances</div>
+      <div class="sheet-grid" id="vacationChips"></div>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-section-title">Perso</div>
+      <div class="sheet-grid" id="customChips"></div>
+      <button class="manage-custom-btn" id="manageCustomBtn" style="display:none;">🗑️ Gérer mes types</button>
+    </div>
+    <div style="height: 24px;"></div>
+  </div>
+
+  <!-- Custom event creation sheet -->
+  <div class="bottom-sheet" id="customSheet">
+    <div class="sheet-handle"></div>
+    <div class="modal-content">
+      <h3>✨ Nouvel événement</h3>
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" class="form-input" id="customName" placeholder="Ex: Formation, RDV...">
+      </div>
+      <div class="form-group">
+        <label>Emoji</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+      </div>
+      <div class="form-group">
+        <label>Durée</label>
+        <div class="duration-selector">
+          <div class="duration-option active" data-dur="allday" onclick="selectDuration('allday', this)">
+            <span class="dur-emoji">📅</span>
+            <span class="dur-label">Journée</span>
+            <span class="dur-desc">Toute la journée</span>
           </div>
-          <div class="form-group">
-            <label>Fin</label>
-            <input type="time" class="form-input" id="customEnd">
+          <div class="duration-option" data-dur="half" onclick="selectDuration('half', this)">
+            <span class="dur-emoji">🕐</span>
+            <span class="dur-label">Demi-journée</span>
+            <span class="dur-desc">Matin ou après-midi</span>
+          </div>
+          <div class="duration-option" data-dur="custom" onclick="selectDuration('custom', this)">
+            <span class="dur-emoji">⏰</span>
+            <span class="dur-label">Horaires</span>
+            <span class="dur-desc">Début / fin</span>
+          </div>
+        </div>
+        <div class="half-day-selector" id="halfDaySelector">
+          <div class="half-day-option active" data-half="morning" onclick="selectHalfDay('morning', this)">
+            <span class="dur-emoji">☀️</span>
+            <span class="dur-label">Matin</span>
+            <span class="dur-desc">8h → 12h</span>
+          </div>
+          <div class="half-day-option" data-half="afternoon" onclick="selectHalfDay('afternoon', this)">
+            <span class="dur-emoji">🌅</span>
+            <span class="dur-label">Après-midi</span>
+            <span class="dur-desc">13h → 18h</span>
+          </div>
+        </div>
+        <div class="time-row-container" id="timeRowContainer">
+          <div class="time-row">
+            <div class="form-group">
+              <label>Début</label>
+              <input type="time" class="form-input" id="customStart">
+            </div>
+            <div class="form-group">
+              <label>Fin</label>
+              <input type="time" class="form-input" id="customEnd">
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeCustomSheet()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveCustomEvent()">Ajouter</button>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeCustomSheet()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveCustomEvent()">Ajouter</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Load order: config (Supabase client) → palette → storage → toast → calendar → sheet → modal → export → app -->
+</div><!-- /screenApp -->
+
+<!-- Load order: config → palette → storage → toast → calendar → sheet → modal → export → auth → app -->
 <script src="js/config.js"></script>
 <script src="js/palette.js"></script>
 <script src="js/storage.js"></script>
@@ -202,6 +303,7 @@
 <script src="js/sheet.js"></script>
 <script src="js/modal.js"></script>
 <script src="js/export.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 
 </body>
