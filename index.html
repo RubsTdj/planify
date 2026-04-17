@@ -5,8 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Planify</title>
   <link rel="stylesheet" href="css/style.css">
+  <!-- Supabase JS client (CDN, no build step) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
+
+<!-- Full-screen loader shown while fetching data from Supabase -->
+<div id="appLoader">
+  <div class="loader-inner">
+    <div class="loader-icon">🩺</div>
+    <div class="loader-spinner"></div>
+    <p>Chargement…</p>
+  </div>
+</div>
 
 <div class="header">
   <div class="header-logo">
@@ -141,7 +152,8 @@
   </div>
 </div>
 
-<!-- Load order matters: palette → storage → toast → calendar → sheet → modal → export → app -->
+<!-- Load order: config (Supabase client) → palette → storage → toast → calendar → sheet → modal → export → app -->
+<script src="js/config.js"></script>
 <script src="js/palette.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/toast.js"></script>
