@@ -13,7 +13,32 @@
 <!-- Full-screen loader shown while fetching data from Supabase -->
 <div id="appLoader">
   <div class="loader-inner">
-    <div class="loader-icon">🩺</div>
+    <svg class="loader-logo-svg" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="64" height="64" rx="16" fill="url(#grad-loader)"/>
+      <!-- Calendar body -->
+      <rect x="11" y="18" width="42" height="32" rx="6" fill="white" fill-opacity="0.18"/>
+      <rect x="11" y="18" width="42" height="32" rx="6" stroke="white" stroke-width="2" stroke-opacity="0.6"/>
+      <!-- Calendar top bar -->
+      <rect x="11" y="18" width="42" height="10" rx="6" fill="white" fill-opacity="0.28"/>
+      <rect x="11" y="23" width="42" height="5" fill="white" fill-opacity="0.28"/>
+      <!-- Hooks -->
+      <rect x="21" y="13" width="4" height="9" rx="2" fill="white" fill-opacity="0.85"/>
+      <rect x="39" y="13" width="4" height="9" rx="2" fill="white" fill-opacity="0.85"/>
+      <!-- Grid dots -->
+      <circle cx="23" cy="35" r="2.5" fill="white" fill-opacity="0.7"/>
+      <circle cx="32" cy="35" r="2.5" fill="white" fill-opacity="0.7"/>
+      <circle cx="41" cy="35" r="2.5" fill="white" fill-opacity="0.7"/>
+      <circle cx="23" cy="43" r="2.5" fill="white" fill-opacity="0.7"/>
+      <!-- Stethoscope head (highlight) -->
+      <circle cx="41" cy="43" r="5" fill="white" fill-opacity="0.22" stroke="white" stroke-width="1.5" stroke-opacity="0.7"/>
+      <circle cx="41" cy="43" r="2" fill="white" fill-opacity="0.8"/>
+      <defs>
+        <linearGradient id="grad-loader" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6366f1"/>
+          <stop offset="1" stop-color="#8b5cf6"/>
+        </linearGradient>
+      </defs>
+    </svg>
     <div class="loader-spinner"></div>
     <p>Chargement…</p>
   </div>
@@ -21,8 +46,37 @@
 
 <div class="header">
   <div class="header-logo">
-    <div class="icon">🩺</div>
-    <h1>Planify</h1>
+    <!-- Illustrative SVG logo mark -->
+    <svg class="logo-mark" width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="38" rx="10" fill="url(#grad-logo)"/>
+      <!-- Calendar body -->
+      <rect x="6" y="11" width="26" height="20" rx="4" fill="white" fill-opacity="0.18"/>
+      <rect x="6" y="11" width="26" height="20" rx="4" stroke="white" stroke-width="1.5" stroke-opacity="0.55"/>
+      <!-- Top bar -->
+      <rect x="6" y="11" width="26" height="7" rx="4" fill="white" fill-opacity="0.22"/>
+      <rect x="6" y="15" width="26" height="3" fill="white" fill-opacity="0.22"/>
+      <!-- Hooks -->
+      <rect x="13" y="7.5" width="2.5" height="6" rx="1.25" fill="white" fill-opacity="0.85"/>
+      <rect x="22.5" y="7.5" width="2.5" height="6" rx="1.25" fill="white" fill-opacity="0.85"/>
+      <!-- Grid dots row 1 -->
+      <circle cx="13" cy="22" r="1.6" fill="white" fill-opacity="0.75"/>
+      <circle cx="19" cy="22" r="1.6" fill="white" fill-opacity="0.75"/>
+      <circle cx="25" cy="22" r="1.6" fill="white" fill-opacity="0.75"/>
+      <!-- Stethoscope circle (bottom right cell) -->
+      <circle cx="25" cy="27.5" r="3.2" fill="white" fill-opacity="0.18" stroke="white" stroke-width="1.2" stroke-opacity="0.65"/>
+      <circle cx="25" cy="27.5" r="1.2" fill="white" fill-opacity="0.85"/>
+      <defs>
+        <linearGradient id="grad-logo" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#6366f1"/>
+          <stop offset="1" stop-color="#8b5cf6"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <!-- Wordmark -->
+    <div class="logo-wordmark">
+      <span class="logo-plan">Plan</span><span class="logo-ify">ify</span>
+      <span class="logo-tagline">planning infirmière</span>
+    </div>
   </div>
   <div class="header-actions">
     <button class="header-btn" onclick="printCalendar()" title="Imprimer">🖨️</button>
