@@ -3,6 +3,51 @@ let batchMode        = false;
 let batchSelected    = new Set();
 let manageCustomMode = false;
 
+// ── Swipe-to-close for all bottom sheets ──────────────────────────────────────
+function initSwipeToClose(sheetEl, closeFn) {
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  function onStart(e) {
+    // Only start drag from the handle or when sheet is scrolled to top
+    const handle = sheetEl.querySelector('.sheet-handle');
+    const target = e.target;
+    const isHandle = handle && (handle === target || handle.contains(target));
+    if (!isHandle && sheetEl.scrollTop > 0) return;
+
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    isDragging = true;
+    sheetEl.classList.add('dragging');
+  }
+
+  function onMove(e) {
+    if (!isDragging) return;
+    currentY = (e.touches ? e.touches[0].clientY : e.clientY) - startY;
+    if (currentY < 0) currentY = 0; // no drag upward
+    sheetEl.style.transform = `translateX(-50%) translateY(${currentY}px)`;
+  }
+
+  function onEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    sheetEl.classList.remove('dragging');
+    sheetEl.style.transform = '';
+
+    if (currentY > 100) {
+      closeFn();
+    }
+    currentY = 0;
+  }
+
+  sheetEl.addEventListener('touchstart',  onStart, { passive: true });
+  sheetEl.addEventListener('touchmove',   onMove,  { passive: true });
+  sheetEl.addEventListener('touchend',    onEnd);
+  sheetEl.addEventListener('mousedown',   onStart);
+  window.addEventListener('mousemove',    onMove);
+  window.addEventListener('mouseup',      onEnd);
+}
+
 function openSheet(dateStr, isBatch) {
   manageCustomMode = false;
   const overlay        = document.getElementById('overlay');

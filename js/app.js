@@ -21,6 +21,10 @@ async function init() {
 
   document.getElementById('overlay').addEventListener('click', closeAllSheets);
   document.getElementById('manageCustomBtn').addEventListener('click', toggleManageCustom);
+
+  // Swipe down to close on both sheets
+  initSwipeToClose(document.getElementById('eventSheet'),  closeSheet);
+  initSwipeToClose(document.getElementById('customSheet'), closeCustomSheet);
 }
 
 document.addEventListener('DOMContentLoaded', init);

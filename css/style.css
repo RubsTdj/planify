@@ -76,13 +76,13 @@ body {
 
 /* ── Calendar grid ── */
 .calendar-container {
-  padding: 0 8px;
+  padding: 0 4px;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-.weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 2px; margin-bottom: 6px; }
+.weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 1px; margin-bottom: 6px; }
 .weekday-header span { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 0; }
 .weekday-header span.weekend { color: #a78bfa; }
 
@@ -90,8 +90,8 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   grid-auto-rows: 1fr;
-  gap: 4px;
-  padding: 0 2px;
+  gap: 3px;
+  padding: 0 1px;
   flex: 1;
   min-height: 0;
 }
@@ -223,10 +223,17 @@ body {
   width: 100%; max-width: 480px; background: var(--card); border-radius: 24px 24px 0 0;
   z-index: 300; transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
   max-height: 85vh; overflow-y: auto;
+  touch-action: pan-y;
+  user-select: none;
 }
 .bottom-sheet.visible { transform: translateX(-50%) translateY(0); }
+.bottom-sheet.dragging { transition: none; }
 
-.sheet-handle { width: 40px; height: 4px; background: #d1d5db; border-radius: 4px; margin: 12px auto; }
+.sheet-handle {
+  width: 40px; height: 5px; background: #d1d5db; border-radius: 4px;
+  margin: 14px auto 10px; cursor: grab;
+}
+.sheet-handle:active { cursor: grabbing; }
 .sheet-header { padding: 0 24px 12px; }
 .sheet-header h3 { font-size: 18px; font-weight: 700; }
 .sheet-date { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
