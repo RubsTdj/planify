@@ -106,30 +106,38 @@
 
     <!-- Setup -->
     <div id="stepPinSetup">
-      <h2 class="auth-title">Crée ton code</h2>
-      <p class="auth-subtitle">6 chiffres pour sécuriser l'accès à ton planning.</p>
-      <div class="pin-dots">
-        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+      <div class="pin-top">
+        <h2 class="auth-title">Crée ton code</h2>
+        <p class="auth-subtitle">6 chiffres pour sécuriser ton planning</p>
+        <div class="pin-dots">
+          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        </div>
       </div>
-      <div class="pin-pad" id="pinPadSetup"></div>
+      <div class="pin-bottom">
+        <div class="pin-pad" id="pinPadSetup"></div>
+      </div>
     </div>
 
     <!-- Confirm -->
     <div id="stepPinConfirm" style="display:none;">
-      <h2 class="auth-title">Confirme ton code</h2>
-      <p class="auth-subtitle">Entre à nouveau les 6 chiffres.</p>
-      <div class="pin-dots">
-        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+      <div class="pin-top">
+        <h2 class="auth-title">Confirme ton code</h2>
+        <p class="auth-subtitle">Entre à nouveau les 6 chiffres</p>
+        <div class="pin-dots">
+          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        </div>
       </div>
-      <div class="pin-pad" id="pinPadConfirm"></div>
+      <div class="pin-bottom">
+        <div class="pin-pad" id="pinPadConfirm"></div>
+      </div>
     </div>
 
     <!-- Verify (returning user) -->
     <div id="stepPinVerify" style="display:none;">
-      <div class="auth-logo" style="margin-bottom:24px;">
-        <svg width="52" height="52" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div class="pin-top">
+        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="64" height="64" rx="18" fill="url(#gv)"/>
           <circle cx="23" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
           <circle cx="32" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
@@ -143,17 +151,18 @@
             </linearGradient>
           </defs>
         </svg>
-        <h1 class="auth-app-name">Planify</h1>
+        <h2 class="auth-title">Bon retour 👋</h2>
+        <div class="pin-dots">
+          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+          <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        </div>
       </div>
-      <h2 class="auth-title">Bon retour 👋</h2>
-      <div class="pin-dots">
-        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-        <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+      <div class="pin-bottom">
+        <div class="pin-pad" id="pinPadVerify"></div>
+        <button class="auth-btn-ghost" id="biometricBtn" onclick="tryBiometric()" style="display:none;">
+          <span id="biometricIcon">🔒</span> Face ID / Touch ID
+        </button>
       </div>
-      <div class="pin-pad" id="pinPadVerify"></div>
-      <button class="auth-btn-ghost" id="biometricBtn" onclick="tryBiometric()" style="display:none;">
-        <span id="biometricIcon">🔒</span> Face ID / Touch ID
-      </button>
     </div>
 
   </div>
