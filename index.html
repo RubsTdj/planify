@@ -170,8 +170,17 @@
     <div class="header-actions">
       <button class="header-btn" onclick="printCalendar()" title="Imprimer">🖨️</button>
       <button class="header-btn" onclick="exportICS()" title="Exporter .ics">📅</button>
-      <button class="header-btn" onclick="signOut()" title="Déconnexion">👤</button>
-    </div>
+      <button class="header-btn header-btn-user" id="userBtn" onclick="toggleUserMenu()" title="Mon compte">
+        <span id="userAvatar"></span>
+      </button>
+  </div>
+  <!-- User menu dropdown -->
+  <div class="user-menu" id="userMenu" style="display:none;">
+    <div class="user-menu-email" id="userMenuEmail"></div>
+    <div class="user-menu-divider"></div>
+    <button class="user-menu-item danger" onclick="confirmSignOut()">Se déconnecter</button>
+  </div>
+  </div>
   </div>
 
   <div class="month-nav">

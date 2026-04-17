@@ -239,6 +239,7 @@ async function tryBiometric() {
 
 // ── Launch app after auth ─────────────────────────────────────────────────────
 async function launchApp() {
+  setUserAvatar();
   showScreen('screenApp');
   showLoader();
   buildEmojiPicker();
@@ -254,16 +255,59 @@ async function launchApp() {
   initSwipeToClose(document.getElementById('customSheet'), closeCustomSheet);
 }
 
-async function signOut() {
+// ── User menu ─────────────────────────────────────────────────────────────────
+function setUserAvatar() {
+  const email = currentUser?.email || '';
+  const letter = email.charAt(0).toUpperCase();
+  const avatar = document.getElementById('userAvatar');
+  const menuEmail = document.getElementById('userMenuEmail');
+  if (avatar) avatar.textContent = letter;
+  if (menuEmail) menuEmail.textContent = email;
+}
+
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // Close on next outside tap
+    setTimeout(() => document.addEventListener('click', closeUserMenu, { once: true }), 10);
+  }
+}
+
+function closeUserMenu() {
+  const menu = document.getElementById('userMenu');
+  if (menu) menu.style.display = 'none';
+}
+
+function confirmSignOut() {
+  closeUserMenu();
+  // Inline confirm inside the sheet
+  const menu = document.getElementById('userMenu');
+  menu.style.display = 'block';
+  menu.innerHTML = `
+    <p class="user-menu-confirm">Se déconnecter ?</p>
+    <div class="user-menu-confirm-row">
+      <button class="user-menu-item danger" onclick="doSignOut()">Oui, déconnexion</button>
+      <button class="user-menu-item" onclick="closeUserMenu()">Annuler</button>
+    </div>`;
+}
+
+async function doSignOut() {
+  closeUserMenu();
   await sb.auth.signOut();
   localStorage.removeItem('planify_pin');
   localStorage.removeItem('planify_cred_id');
   currentUser = null;
   events = {};
   customTypes = [];
+  DEFAULT_PRESETS.length = 0;
   showScreen('screenAuth');
   showAuthStep('stepEmail');
 }
+
+// Keep old name as alias for any remaining references
+async function signOut() { await doSignOut(); }
 
 // ── Build PIN numpad ─────────────────────────────────────────────────────────
 function buildPinPads() {

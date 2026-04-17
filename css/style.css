@@ -176,6 +176,7 @@ body {
   padding: 12px 20px; background: var(--card);
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 100;
+  flex-wrap: wrap;
 }
 .header-logo { display: flex; align-items: center; gap: 10px; }
 
@@ -194,6 +195,41 @@ body {
   box-shadow: 0 8px 32px rgba(99,102,241,0.3);
 }
 .header-actions { display: flex; gap: 8px; }
+
+/* User avatar button */
+.header-btn-user { font-size: 15px; font-weight: 700; color: white;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  border-color: transparent !important; }
+
+/* User dropdown menu */
+.user-menu {
+  position: absolute; top: 64px; right: 20px;
+  background: var(--card); border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 1px solid var(--border);
+  padding: 6px; min-width: 220px; z-index: 200;
+}
+.user-menu-email {
+  padding: 10px 12px 8px;
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.user-menu-divider { height: 1px; background: var(--border); margin: 2px 0 6px; }
+.user-menu-item {
+  display: block; width: 100%; text-align: left;
+  padding: 10px 12px; border-radius: 10px; border: none;
+  background: none; font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 500; color: var(--text);
+  cursor: pointer; transition: background 0.15s;
+}
+.user-menu-item:hover, .user-menu-item:active { background: #f3f4f6; }
+.user-menu-item.danger { color: #dc2626; }
+.user-menu-item.danger:hover { background: #fef2f2; }
+.user-menu-confirm {
+  padding: 10px 12px 6px; font-size: 13px; font-weight: 600;
+  color: var(--text); margin: 0;
+}
+.user-menu-confirm-row { display: flex; flex-direction: column; gap: 2px; }
 .header-btn {
   width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: var(--card); display: flex; align-items: center; justify-content: center;
