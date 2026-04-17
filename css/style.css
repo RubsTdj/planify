@@ -24,8 +24,8 @@ body {
 #screenApp {
   position: fixed;
   inset: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
   overflow: hidden;
 }
 
@@ -129,7 +129,7 @@ button, input, a, [onclick] {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 20px; background: var(--card);
   border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
+  position: relative; z-index: 100;
   flex-wrap: wrap;
 }
 .header-logo { display: flex; align-items: center; gap: 10px; }
