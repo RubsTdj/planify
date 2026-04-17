@@ -17,3 +17,13 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Prevent double-tap zoom on iOS (CSS touch-action alone is not enough)
+let lastTap = 0;
+document.addEventListener('touchend', function (e) {
+  const now = Date.now();
+  if (now - lastTap < 300) {
+    e.preventDefault();
+  }
+  lastTap = now;
+}, { passive: false });
