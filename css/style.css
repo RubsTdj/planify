@@ -33,6 +33,11 @@ body {
   max-height: 100dvh;
 }
 
+/* Disable double-tap zoom on all interactive elements */
+button, input, a, [onclick] {
+  touch-action: manipulation;
+}
+
 /* ── Auth & PIN screens ───────────────────────────────────────────────── */
 .auth-screen {
   position: fixed; inset: 0;
@@ -181,6 +186,7 @@ body {
   transition: background 0.1s, transform 0.1s;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* disables double-tap zoom */
 }
 .pin-key:active { background: #eef2ff; transform: scale(0.92); }
 .pin-key .pin-key-sub {
