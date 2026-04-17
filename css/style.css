@@ -16,11 +16,13 @@ body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
+  height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
   position: relative;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Header ── */
@@ -51,7 +53,7 @@ body {
 
 /* ── Month navigation ── */
 .month-nav {
-  display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 12px;
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 10px;
 }
 .month-nav h2 { font-size: 22px; font-weight: 700; text-transform: capitalize; }
 .month-nav-btn {
@@ -62,15 +64,29 @@ body {
 .month-nav-btn:active { transform: scale(0.9); background: #f3f4f6; }
 
 /* ── Calendar grid ── */
-.calendar-container { padding: 0 8px; }
-.weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 2px; margin-bottom: 8px; }
+.calendar-container {
+  padding: 0 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 2px; margin-bottom: 6px; }
 .weekday-header span { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
 
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 2px; }
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  padding: 0 2px;
+  flex: 1;
+  min-height: 0;
+}
 
 .day-cell {
-  min-height: 80px; border-radius: 12px; background: var(--card); border: 2px solid transparent;
-  display: flex; flex-direction: column; align-items: stretch; padding: 4px;
+  border-radius: 12px; background: var(--card); border: 2px solid transparent;
+  display: flex; flex-direction: column; align-items: stretch; padding: 6px 4px 4px;
   cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
 }
 .day-cell:active { transform: scale(0.94); }
@@ -110,7 +126,8 @@ body {
 .bottom-bar {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   width: 100%; max-width: 480px; background: var(--card); border-top: 1px solid var(--border);
-  padding: 12px 20px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding: 14px 20px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 16px));
   display: flex; gap: 10px; z-index: 100;
 }
 .batch-btn {
@@ -301,7 +318,7 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Misc ── */
-.bottom-spacer { height: 80px; }
+.bottom-spacer { height: calc(80px + env(safe-area-inset-bottom, 16px)); }
 ::-webkit-scrollbar { width: 0; }
 
 /* ── Print ── */
