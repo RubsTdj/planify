@@ -1,5 +1,5 @@
-let customTypes     = [];
-let selectedEmoji   = '';
+let customTypes      = [];
+let selectedEmoji    = '';
 let selectedDuration = 'allday';
 let selectedHalfDay  = 'morning';
 
@@ -28,9 +28,9 @@ function selectDuration(dur, el) {
   el.classList.add('active');
   const timeRow = document.getElementById('timeRowContainer');
   const halfSel = document.getElementById('halfDaySelector');
-  if (dur === 'custom')     { timeRow.classList.add('visible'); halfSel.style.display = 'none'; }
-  else if (dur === 'half')  { timeRow.classList.remove('visible'); halfSel.style.display = 'flex'; }
-  else                      { timeRow.classList.remove('visible'); halfSel.style.display = 'none'; }
+  if (dur === 'custom')    { timeRow.classList.add('visible'); halfSel.style.display = 'none'; }
+  else if (dur === 'half') { timeRow.classList.remove('visible'); halfSel.style.display = 'flex'; }
+  else                     { timeRow.classList.remove('visible'); halfSel.style.display = 'none'; }
 }
 
 function selectHalfDay(half, el) {
@@ -68,7 +68,7 @@ function closeCustomSheet() {
   document.getElementById('customSheet').classList.remove('visible');
 }
 
-function saveCustomEvent() {
+async function saveCustomEvent() {
   const name = document.getElementById('customName').value.trim();
   if (!name) { showToast('⚠️ Donne un nom'); return; }
 
@@ -81,20 +81,23 @@ function saveCustomEvent() {
   };
 
   if (selectedDuration === 'half') {
-    newType.allDay  = false;
-    newType.halfDay = selectedHalfDay;
-    if (selectedHalfDay === 'morning') { newType.startTime = '08:00'; newType.endTime = '12:00'; }
-    else                               { newType.startTime = '13:00'; newType.endTime = '18:00'; }
+    newType.allDay    = false;
+    newType.halfDay   = selectedHalfDay;
+    newType.startTime = selectedHalfDay === 'morning' ? '08:00' : '13:00';
+    newType.endTime   = selectedHalfDay === 'morning' ? '12:00' : '18:00';
   } else if (selectedDuration === 'custom') {
-    newType.allDay     = false;
-    newType.startTime  = document.getElementById('customStart').value || null;
-    newType.endTime    = document.getElementById('customEnd').value   || null;
+    newType.allDay    = false;
+    newType.startTime = document.getElementById('customStart').value || null;
+    newType.endTime   = document.getElementById('customEnd').value   || null;
     if (!newType.startTime) { newType.allDay = true; newType.duration = 'allday'; }
   }
 
+  // Optimistic update
   customTypes.push(newType);
-  saveData();
   closeCustomSheet();
   showToast(`${newType.emoji} ${newType.label} créé !`);
   if (selectedDate) setTimeout(() => openSheet(selectedDate, false), 400);
+
+  // Persist
+  await saveCustomType(newType);
 }

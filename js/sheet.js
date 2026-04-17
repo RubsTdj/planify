@@ -1,6 +1,6 @@
-let selectedDate   = null;
-let batchMode      = false;
-let batchSelected  = new Set();
+let selectedDate     = null;
+let batchMode        = false;
+let batchSelected    = new Set();
 let manageCustomMode = false;
 
 function openSheet(dateStr, isBatch) {
@@ -140,8 +140,8 @@ function buildChips(dateStr, isBatch) {
   addNewChip.addEventListener('click', openCustomSheet);
   customContainer.appendChild(addNewChip);
 
-  const manageBtn  = document.getElementById('manageCustomBtn');
-  const allPerso   = getAllPersoTypes();
+  const manageBtn = document.getElementById('manageCustomBtn');
+  const allPerso  = getAllPersoTypes();
   manageBtn.style.display = allPerso.length > 0 ? 'inline-flex' : 'none';
   if (manageCustomMode) {
     manageBtn.classList.add('active');
@@ -169,7 +169,6 @@ function toggleManageCustom() {
 }
 
 function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
-  // Replace chip content with inline confirm buttons
   const originalHTML = chip.innerHTML;
   chip.style.animation = 'none';
   chip.innerHTML = `
@@ -185,7 +184,6 @@ function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
     e.stopPropagation();
     chip.innerHTML = originalHTML;
     chip.style.animation = '';
-    // Re-attach delete listener
     chip.querySelector('.chip-delete').addEventListener('click', function (e2) {
       e2.stopPropagation();
       e2.preventDefault();
@@ -194,7 +192,8 @@ function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
   });
 }
 
-function deletePersoType(typeId, typeName) {
+async function deletePersoType(typeId, typeName) {
+  // Optimistic UI update
   for (const dateStr in events) {
     events[dateStr] = events[dateStr].filter(e => e !== typeId);
     if (events[dateStr].length === 0) delete events[dateStr];
@@ -204,12 +203,8 @@ function deletePersoType(typeId, typeName) {
   customTypes = customTypes.filter(t => t.id !== typeId);
 
   const presetIdx = DEFAULT_PRESETS.findIndex(t => t.id === typeId);
-  if (presetIdx !== -1) {
-    DEFAULT_PRESETS.splice(presetIdx, 1);
-    persistRemovedPreset(typeId);
-  }
+  if (presetIdx !== -1) DEFAULT_PRESETS.splice(presetIdx, 1);
 
-  saveData();
   showToast(`🗑️ "${typeName}" supprimé`);
   render();
 
@@ -220,61 +215,71 @@ function deletePersoType(typeId, typeName) {
     const dayEvents      = events[selectedDate] || [];
     const currentSection = document.getElementById('sheetCurrent');
     const divider        = document.getElementById('sheetDivider');
-    if (dayEvents.length > 0) {
-      renderCurrentEvents(selectedDate, dayEvents);
-    } else {
-      currentSection.style.display = 'none';
-      divider.style.display        = 'none';
-    }
+    if (dayEvents.length > 0) renderCurrentEvents(selectedDate, dayEvents);
+    else { currentSection.style.display = 'none'; divider.style.display = 'none'; }
   }
 
   if (getAllPersoTypes().length === 0) manageCustomMode = false;
+
+  // Persist to Supabase
+  await deleteCustomType(typeId);
 }
 
-function addEvent(typeId, isBatch) {
+async function addEvent(typeId, isBatch) {
   if (manageCustomMode) return;
+
   if (isBatch) {
-    batchSelected.forEach(dateStr => {
+    const dates = [...batchSelected];
+    // Optimistic update
+    dates.forEach(dateStr => {
       if (!events[dateStr]) events[dateStr] = [];
       if (!events[dateStr].includes(typeId)) events[dateStr].push(typeId);
     });
     const type = getEventType(typeId);
-    showToast(`${type.emoji} ${type.label} → ${batchSelected.size} jour(s)`);
+    showToast(`${type.emoji} ${type.label} → ${dates.length} jour(s)`);
     batchSelected.clear();
     batchMode = false;
+    closeSheet();
+    render();
+    // Persist
+    await saveEventBatch(dates, typeId);
   } else {
     if (!events[selectedDate]) events[selectedDate] = [];
     if (!events[selectedDate].includes(typeId)) {
+      // Optimistic update
       events[selectedDate].push(typeId);
       const type = getEventType(typeId);
       showToast(`${type.emoji} ${type.label} ajouté !`);
+      closeSheet();
+      render();
+      // Persist
+      await saveEventAdd(selectedDate, typeId);
+    } else {
+      closeSheet();
     }
   }
-  saveData();
-  closeSheet();
-  render();
 }
 
-function removeEventFromDay(dateStr, evtId) {
+async function removeEventFromDay(dateStr, evtId) {
   if (!events[dateStr]) return;
+  // Optimistic update
   events[dateStr] = events[dateStr].filter(e => e !== evtId);
   if (events[dateStr].length === 0) delete events[dateStr];
   delete animatedTags[dateStr + '|' + evtId];
+
   const type = getEventType(evtId);
   showToast(`${type ? type.emoji + ' ' + type.label : 'Event'} retiré`);
-  saveData();
   render();
 
   const dayEvents      = events[dateStr] || [];
   const currentSection = document.getElementById('sheetCurrent');
   const divider        = document.getElementById('sheetDivider');
-  if (dayEvents.length > 0) {
-    renderCurrentEvents(dateStr, dayEvents);
-  } else {
-    currentSection.style.display = 'none';
-    divider.style.display        = 'none';
-  }
+  if (dayEvents.length > 0) renderCurrentEvents(dateStr, dayEvents);
+  else { currentSection.style.display = 'none'; divider.style.display = 'none'; }
   buildChips(dateStr, false);
+
+  // Persist
+  await saveEventRemove(dateStr, evtId);
 }
 
 function toggleBatchMode() {
