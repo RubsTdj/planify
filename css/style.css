@@ -43,17 +43,22 @@ button, input, a, [onclick] {
 .loader-inner {
   display: flex; flex-direction: column; align-items: center; gap: 20px;
 }
-.loader-logo-svg { animation: loaderPulse 1.4s ease-in-out infinite; }
-@keyframes loaderPulse {
-  0%,100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(0.92); opacity: 0.7; }
+.loader-logo-svg { /* static — only the dots inside animate */ }
+
+.ld { animation: dotPulse 1.4s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.ld1{animation-delay:0s} .ld2{animation-delay:.12s} .ld3{animation-delay:.24s}
+.ld4{animation-delay:.36s} .ld5{animation-delay:.48s} .ld6{animation-delay:.60s}
+
+@keyframes dotPulse {
+  0%,100% { opacity: 0.3; transform: scale(0.7); }
+  50%      { opacity: 1;   transform: scale(1.2); }
 }
-.ld { animation: ldFade 1.4s ease-in-out infinite; }
-.ld1{animation-delay:0s} .ld2{animation-delay:.1s} .ld3{animation-delay:.2s}
-.ld4{animation-delay:.3s} .ld5{animation-delay:.4s}
-.ld-today { animation: ldToday 1.4s ease-in-out infinite; }
-@keyframes ldFade { 0%,100%{fill-opacity:.5} 50%{fill-opacity:1} }
-@keyframes ldToday { 0%,100%{r:6} 50%{r:7.5} }
+
+.ld-today { animation: dotPulseToday 1.4s ease-in-out infinite; animation-delay: .60s; }
+@keyframes dotPulseToday {
+  0%,100% { opacity: 0.65; transform: scale(0.85); filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
+  50%     { opacity: 1;    transform: scale(1.25); filter: drop-shadow(0 0 8px rgba(255,255,255,0.9)); }
+}
 
 /* ── Auth screen ── */
 .auth-screen {
