@@ -18,23 +18,28 @@ function showAuthStep(stepId) {
 async function initAuth() {
   initOtpInputs();
 
-  const { data: { session } } = await sb.auth.getSession();
+  try {
+    const { data: { session } } = await sb.auth.getSession();
 
-  if (session) {
-    // Valid session — go straight to app
-    currentUser = session.user;
-    await launchApp();
-  } else {
-    // Try silent refresh (handles access token expiry, refresh token valid for months)
-    const { data } = await sb.auth.refreshSession();
-    if (data?.session) {
-      currentUser = data.session.user;
+    if (session) {
+      currentUser = session.user;
       await launchApp();
     } else {
-      // No session at all — show auth screen
-      showScreen('screenAuth');
-      showAuthStep('stepEmail');
+      const { data } = await sb.auth.refreshSession();
+      if (data?.session) {
+        currentUser = data.session.user;
+        await launchApp();
+      } else {
+        showScreen('screenAuth');
+        showAuthStep('stepEmail');
+      }
     }
+  } catch (err) {
+    console.error('initAuth error:', err);
+    // If anything fails, always show auth screen — never leave loader stuck
+    hideLoader();
+    showScreen('screenAuth');
+    showAuthStep('stepEmail');
   }
 }
 
@@ -127,20 +132,26 @@ function clearOtp() {
 
 // ── Launch app ─────────────────────────────────────────────────────────────
 async function launchApp() {
-  setUserAvatar();
-  showScreen('screenApp');
-  showLoader();
-  buildEmojiPicker();
-  const [_] = await Promise.all([
-    loadData(),
-    new Promise(r => setTimeout(r, 2500)),
-  ]);
-  hideLoader();
-  render();
-  document.getElementById('overlay').addEventListener('click', closeAllSheets);
-  document.getElementById('manageCustomBtn').addEventListener('click', toggleManageCustom);
-  initSwipeToClose(document.getElementById('eventSheet'),  closeSheet);
-  initSwipeToClose(document.getElementById('customSheet'), closeCustomSheet);
+  try {
+    setUserAvatar();
+    showScreen('screenApp');
+    showLoader();
+    buildEmojiPicker();
+    const [_] = await Promise.all([
+      loadData(),
+      new Promise(r => setTimeout(r, 2500)),
+    ]);
+    hideLoader();
+    render();
+    document.getElementById('overlay').addEventListener('click', closeAllSheets);
+    document.getElementById('manageCustomBtn').addEventListener('click', toggleManageCustom);
+    initSwipeToClose(document.getElementById('eventSheet'),  closeSheet);
+    initSwipeToClose(document.getElementById('customSheet'), closeCustomSheet);
+  } catch (err) {
+    console.error('launchApp error:', err);
+    hideLoader();
+    render();
+  }
 }
 
 // ── User menu ──────────────────────────────────────────────────────────────
