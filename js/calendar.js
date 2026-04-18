@@ -103,26 +103,8 @@ function renderCalendar() {
 }
 
 function renderEmptyState() {
-  const container = document.getElementById('calendarContainer');
-  const existing  = document.getElementById('emptyState');
-
-  // Check if current month has any events
-  const hasEvents = Object.keys(events).some(d => d.startsWith(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`));
-
-  if (!hasEvents) {
-    if (!existing) {
-      const el = document.createElement('div');
-      el.id        = 'emptyState';
-      el.className = 'empty-state';
-      el.innerHTML = `
-        <div class="empty-state-icon">🗓️</div>
-        <h3>Mois vide</h3>
-        <p>Appuie sur un jour pour ajouter ton premier shift ou événement ✨</p>`;
-      container.appendChild(el);
-    }
-  } else {
-    if (existing) existing.remove();
-  }
+  const existing = document.getElementById('emptyState');
+  if (existing) existing.remove();
 }
 
 function changeMonth(dir) {
