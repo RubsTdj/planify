@@ -2,8 +2,6 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { height: 100%; }
-
 :root {
   --bg: #FAFAF9;
   --card: #FFFFFF;
@@ -18,17 +16,13 @@ body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
-  height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 #screenApp {
-  flex: 1;
-  min-height: 0;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
