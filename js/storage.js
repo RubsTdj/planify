@@ -39,30 +39,12 @@ async function loadData() {
       }
     });
 
-    // Seed default presets for new users
-    if (DEFAULT_PRESETS.length === 0) {
-      await seedDefaultPresets(uid);
-    }
-
   } catch (err) {
     console.error('Supabase loadData error:', err);
     showToast('⚠️ Erreur de connexion à la base de données');
   }
 }
 
-async function seedDefaultPresets(uid) {
-  const presets = [
-    { id: `preset_paris_${uid}`,         label: 'Paris',         emoji: '🗼', duration: 'allday', all_day: true,  half_day: null,      start_time: null,    end_time: null,    is_deleted: false, user_id: uid },
-    { id: `preset_physio_${uid}`,        label: 'Physio',        emoji: '💪', duration: 'allday', all_day: true,  half_day: null,      start_time: null,    end_time: null,    is_deleted: false, user_id: uid },
-    { id: `preset_coiffeur_${uid}`,      label: 'Coiffeur',      emoji: '💇', duration: 'half',   all_day: false, half_day: 'morning', start_time: '08:00', end_time: '12:00', is_deleted: false, user_id: uid },
-    { id: `preset_estheticienne_${uid}`, label: 'Esthéticienne', emoji: '✨', duration: 'half',   all_day: false, half_day: 'morning', start_time: '08:00', end_time: '12:00', is_deleted: false, user_id: uid },
-    { id: `preset_manucure_${uid}`,      label: 'Manucure',      emoji: '💅', duration: 'half',   all_day: false, half_day: 'morning', start_time: '08:00', end_time: '12:00', is_deleted: false, user_id: uid },
-    { id: `preset_formation_${uid}`,     label: 'Formation',     emoji: '📋', duration: 'allday', all_day: true,  half_day: null,      start_time: null,    end_time: null,    is_deleted: false, user_id: uid },
-  ];
-  const { error } = await sb.from('custom_types').insert(presets);
-  if (error && error.code !== '23505') { console.error('seedDefaultPresets:', error); return; }
-  presets.forEach(p => DEFAULT_PRESETS.push(dbRowToCustomType(p)));
-}
 
 // Save a single day's event addition
 async function saveEventAdd(dateStr, typeId) {
