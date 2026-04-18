@@ -2,6 +2,8 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+html { height: 100%; }
+
 :root {
   --bg: #FAFAF9;
   --card: #FFFFFF;
@@ -16,16 +18,16 @@ body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
+  height: 100%;
   max-width: 480px;
   margin: 0 auto;
   overflow: hidden;
 }
 
 #screenApp {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 

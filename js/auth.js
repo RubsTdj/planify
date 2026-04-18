@@ -135,7 +135,6 @@ async function launchApp() {
   setUserAvatar();
   showScreen('screenApp');
   showLoader();
-  buildEmojiPicker();
   const [_] = await Promise.all([
     loadData(),
     new Promise(r => setTimeout(r, 2500)),
