@@ -18,12 +18,17 @@ body {
   color: var(--text);
   max-width: 480px;
   margin: 0 auto;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  position: relative;
   overflow-x: hidden;
 }
 
 #screenApp {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 /* Disable double-tap zoom on all interactive elements */
@@ -191,6 +196,8 @@ button, input, a, [onclick] {
 /* ── Month navigation ── */
 .month-nav {
   display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 10px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
 }
 .month-nav h2 {
   font-size: 22px; font-weight: 800; text-transform: capitalize;
