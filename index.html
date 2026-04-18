@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<!-- ── Loader ──────────────────────────────────────────────────────────────── -->
+<!-- ── Loader ──────────────────────────────────────────────────────────── -->
 <div id="appLoader">
   <div class="loader-inner">
     <svg class="loader-logo-svg" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -34,7 +34,7 @@
   </div>
 </div>
 
-<!-- ── Auth screen ─────────────────────────────────────────────────────────── -->
+<!-- ── Auth screen ──────────────────────────────────────────────────────── -->
 <div id="screenAuth" class="auth-screen" style="display:none;">
   <div class="auth-inner">
 
@@ -56,7 +56,7 @@
       <h1 class="auth-app-name">Planify</h1>
     </div>
 
-    <!-- Étape 1 : email -->
+    <!-- Step 1: email -->
     <div id="stepEmail">
       <h2 class="auth-title">Bienvenue 👋</h2>
       <p class="auth-subtitle">Entre ton email pour créer ton compte ou te connecter.</p>
@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <!-- Étape 2 : code OTP -->
+    <!-- Step 2: OTP code -->
     <div id="stepOtpCode" style="display:none;">
       <div class="auth-sent-icon">📩</div>
       <h2 class="auth-title">Entre ton code</h2>
@@ -85,7 +85,7 @@
       <button class="auth-btn-ghost" onclick="showAuthStep('stepEmail'); clearOtp()">← Changer l'email</button>
     </div>
 
-    <!-- Étape session expirée -->
+    <!-- Step 3: session expired -->
     <div id="stepExpired" style="display:none;">
       <div class="auth-sent-icon">🔑</div>
       <h2 class="auth-title">Session expirée</h2>
@@ -101,9 +101,10 @@
   </div>
 </div>
 
-<!-- ── App ─────────────────────────────────────────────────────────────────── -->
+<!-- ── App ─────────────────────────────────────────────────────────────── -->
 <div id="screenApp" style="display:none;">
 
+  <!-- Header -->
   <div class="header">
     <div class="header-logo">
       <svg class="logo-mark" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -128,16 +129,16 @@
       <button class="header-btn header-btn-user" id="userBtn" onclick="toggleUserMenu()" title="Mon compte">
         <span id="userAvatar"></span>
       </button>
-  </div>
-  <!-- User menu dropdown -->
-  <div class="user-menu" id="userMenu" style="display:none;">
-    <div class="user-menu-email" id="userMenuEmail"></div>
-    <div class="user-menu-divider"></div>
-    <button class="user-menu-item danger" onclick="confirmSignOut()">Se déconnecter</button>
-  </div>
-  </div>
+    </div>
+    <!-- User menu -->
+    <div class="user-menu" id="userMenu" style="display:none;">
+      <div class="user-menu-email" id="userMenuEmail"></div>
+      <div class="user-menu-divider"></div>
+      <button class="user-menu-item danger" onclick="confirmSignOut()">Se déconnecter</button>
+    </div>
   </div>
 
+  <!-- Month navigation -->
   <div class="month-nav">
     <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
     <h2>
@@ -147,6 +148,7 @@
     <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
   </div>
 
+  <!-- Calendar -->
   <div class="calendar-container" id="calendarContainer">
     <div class="weekday-header">
       <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span>
@@ -157,15 +159,20 @@
     <div class="print-header">Planify — généré le <span id="printDate"></span></div>
   </div>
 
+  <!-- Bottom spacer (reserves space for fixed bottom bar) -->
   <div class="bottom-spacer"></div>
+
+  <!-- Toast + batch counter -->
   <div class="batch-counter" id="batchCounter"></div>
   <div id="toast" class="toast"></div>
 
+  <!-- Bottom bar -->
   <div class="bottom-bar" id="bottomBar">
     <button class="batch-btn today-btn" onclick="goToday()">📍 Aujourd'hui</button>
     <button class="batch-btn multiselect-btn" onclick="toggleBatchMode()">⚡ Multi-select</button>
   </div>
 
+  <!-- Overlay -->
   <div class="overlay" id="overlay"></div>
 
   <!-- Event picker sheet -->
@@ -197,7 +204,7 @@
       <div class="sheet-grid" id="customChips"></div>
       <button class="manage-custom-btn" id="manageCustomBtn" style="display:none;">🗑️ Gérer mes types</button>
     </div>
-    <div style="height: 24px;"></div>
+    <div style="height:24px;"></div>
   </div>
 
   <!-- Custom event creation sheet -->
@@ -266,7 +273,7 @@
 
 </div><!-- /screenApp -->
 
-<!-- Load order: config → palette → storage → toast → calendar → sheet → modal → export → auth → app -->
+<!-- Scripts — load order matters -->
 <script src="js/config.js"></script>
 <script src="js/palette.js"></script>
 <script src="js/storage.js"></script>

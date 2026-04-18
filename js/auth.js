@@ -5,11 +5,6 @@ let currentUser = null;
 function showScreen(id) {
   document.getElementById('screenAuth').style.display = id === 'screenAuth' ? 'flex' : 'none';
   document.getElementById('screenApp').style.display  = id === 'screenApp'  ? 'flex' : 'none';
-  // Ensure flex-direction is applied (overrides any stale inline style)
-  if (id === 'screenApp') {
-    const app = document.getElementById('screenApp');
-    app.style.flexDirection = 'column';
-  }
 }
 
 function showAuthStep(stepId) {
