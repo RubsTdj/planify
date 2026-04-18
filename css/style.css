@@ -283,14 +283,19 @@ button, input, a, [onclick] { touch-action: manipulation; }
 .day-dots { display: flex; gap: 2px; flex-wrap: wrap; padding: 1px 2px; }
 .day-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 
-/* Empty state */
+/* Empty state — absolute so it doesn't shrink the calendar grid */
 .empty-state {
+  position: absolute; inset: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px; padding: 24px; text-align: center; flex: 1;
+  gap: 12px; padding: 24px; text-align: center;
+  pointer-events: none;
 }
-.empty-state-icon { font-size: 40px; }
-.empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text); }
-.empty-state p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.empty-state-icon { font-size: 44px; }
+.empty-state h3 { font-size: 17px; font-weight: 700; color: var(--text); }
+.empty-state p { font-size: 14px; color: var(--text-secondary); line-height: 1.5; max-width: 260px; }
+
+/* calendar-container needs relative positioning for the absolute empty state */
+.calendar-container { position: relative; }
 
 /* ── Bottom bar ──────────────────────────────────────────────────────── */
 .bottom-spacer { flex-shrink: 0; height: calc(72px + env(safe-area-inset-bottom,16px)); }
