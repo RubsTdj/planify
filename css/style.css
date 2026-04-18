@@ -18,14 +18,12 @@ body {
   color: var(--text);
   max-width: 480px;
   margin: 0 auto;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 #screenApp {
-  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* Disable double-tap zoom on all interactive elements */
@@ -128,7 +126,7 @@ button, input, a, [onclick] {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 20px; background: var(--card);
   border-bottom: 1px solid var(--border);
-  position: relative; z-index: 100;
+  position: sticky; top: 0; z-index: 100;
   flex-wrap: wrap;
 }
 .header-logo { display: flex; align-items: center; gap: 10px; }
@@ -216,10 +214,6 @@ button, input, a, [onclick] {
 /* ── Calendar grid ── */
 .calendar-container {
   padding: 0 4px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 1px; margin-bottom: 6px; }
 .weekday-header span { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 0; }
@@ -228,14 +222,13 @@ button, input, a, [onclick] {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: 1fr;
   gap: 3px;
   padding: 0 1px;
-  flex: 1;
-  min-height: 0;
 }
 
 .day-cell {
+  aspect-ratio: 1;
+  min-height: 44px;
   border-radius: 12px; background: var(--card); border: 2px solid transparent;
   display: flex; flex-direction: column; align-items: stretch; padding: 6px 4px 4px;
   cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
