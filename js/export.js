@@ -22,9 +22,20 @@ function buildVEvent(dateStr, type, dtStamp) {
   // Stable UID: same (date, type) always yields the same UID across exports.
   lines.push(`UID:${dateStr}-${type.id}@planify.local`);
   lines.push(`DTSTAMP:${dtStamp}`);
-  lines.push(`SUMMARY:${icsEscape(`${type.emoji} ${type.label}`)}`);
 
-  if (type.allDay) {
+  // Shifts dont l'horaire est purement informatif (Matin/Soir/Nuit) :
+  // exportés en all-day pour éviter tout chevauchement (notamment Nuit qui
+  // passe minuit). L'horaire reste visible dans le titre.
+  const isInformational = type.informationalTime === true;
+  const exportAsAllDay  = type.allDay || isInformational;
+
+  const summaryBase = `${type.emoji} ${type.label}`;
+  const summary = (isInformational && type.startTime && type.endTime)
+    ? `${summaryBase} (${type.startTime} → ${type.endTime})`
+    : summaryBase;
+  lines.push(`SUMMARY:${icsEscape(summary)}`);
+
+  if (exportAsAllDay) {
     // RFC 5545: DTEND is exclusive — use next day for a 1-day all-day event.
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
@@ -39,7 +50,8 @@ function buildVEvent(dateStr, type, dtStamp) {
 
     const endDT = new Date(start);
     endDT.setHours(e.h, e.m, 0, 0);
-    // Overnight shift (e.g. Nuit 22:00 → 07:30): roll end into the next day.
+    // Sécurité : si un event custom franchit minuit, on bascule la fin au
+    // lendemain (sinon DTEND < DTSTART et certains calendriers refusent).
     if (isOvernightShift(type)) endDT.setDate(endDT.getDate() + 1);
 
     lines.push(`DTSTART:${icsLocalDateTime(startDT)}`);
