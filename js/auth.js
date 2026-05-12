@@ -1,7 +1,13 @@
-// ── Auth state ─────────────────────────────────────────────────────────────
+// ─── Authentication (Supabase magic-link OTP) ─────────────────────────────────
+// Two-step flow:
+//   1) User enters their email → `signInWithOtp` sends a 6-digit code.
+//   2) User pastes/types the code → `verifyOtp` issues a session.
+// All UI strings come from the user but are inserted via textContent — no HTML
+// injection surface remains in this file.
+
 let currentUser = null;
 
-// ── Screen management ──────────────────────────────────────────────────────
+// ── Screen / step management ─────────────────────────────────────────────────
 function showScreen(id) {
   document.getElementById('screenAuth').style.display = id === 'screenAuth' ? 'flex' : 'none';
   document.getElementById('screenApp').style.display  = id === 'screenApp'  ? 'flex' : 'none';
@@ -14,39 +20,39 @@ function showAuthStep(stepId) {
   });
 }
 
-// ── Entry point ────────────────────────────────────────────────────────────
+// ── Entry point — called from app.js on DOMContentLoaded ─────────────────────
 async function initAuth() {
   initOtpInputs();
 
   try {
     const { data: { session } } = await sb.auth.getSession();
-
     if (session) {
       currentUser = session.user;
       await launchApp();
-    } else {
-      const { data } = await sb.auth.refreshSession();
-      if (data?.session) {
-        currentUser = data.session.user;
-        await launchApp();
-      } else {
-        showScreen('screenAuth');
-        showAuthStep('stepEmail');
-      }
+      return;
     }
+    // No active session — try refreshing (e.g. cookie still valid).
+    const { data } = await sb.auth.refreshSession();
+    if (data?.session) {
+      currentUser = data.session.user;
+      await launchApp();
+      return;
+    }
+    showScreen('screenAuth');
+    showAuthStep('stepEmail');
   } catch (err) {
     console.error('initAuth error:', err);
-    // If anything fails, always show auth screen — never leave loader stuck
+    // Never leave the loader stuck — bail out to the auth screen.
     hideLoader();
     showScreen('screenAuth');
     showAuthStep('stepEmail');
   }
 }
 
-// ── Step 1: send OTP code ──────────────────────────────────────────────────
+// ── Step 1: send OTP code ────────────────────────────────────────────────────
 async function sendOtpCode() {
   const email = document.getElementById('authEmail').value.trim();
-  if (!email || !email.includes('@')) { showAuthError('Entre une adresse email valide'); return; }
+  if (!isValidEmail(email)) { showAuthError('Entre une adresse email valide'); return; }
 
   setAuthLoading(true);
   const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
@@ -59,10 +65,10 @@ async function sendOtpCode() {
   setTimeout(() => document.querySelector('.otp-digit')?.focus(), 150);
 }
 
-// ── Step 2: verify OTP code ────────────────────────────────────────────────
+// ── Step 2: verify OTP code ──────────────────────────────────────────────────
 async function verifyOtpCode() {
   const digits = [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
-  if (digits.length < 6) return;
+  if (!/^\d{6}$/.test(digits)) return;
 
   const email = document.getElementById('authEmail').value.trim();
   setOtpLoading(true);
@@ -75,10 +81,10 @@ async function verifyOtpCode() {
   await launchApp();
 }
 
-// ── Step: expired session — resend OTP ────────────────────────────────────
+// ── Step 3: expired session — resend OTP ─────────────────────────────────────
 async function sendExpiredOtp() {
   const email = document.getElementById('expiredEmail').value.trim();
-  if (!email || !email.includes('@')) { showAuthError('Entre une adresse email valide'); return; }
+  if (!isValidEmail(email)) { showAuthError('Entre une adresse email valide'); return; }
 
   const btn = document.getElementById('expiredBtn');
   btn.disabled = true; btn.textContent = 'Envoi…';
@@ -86,14 +92,13 @@ async function sendExpiredOtp() {
   btn.disabled = false; btn.textContent = 'Envoyer le code';
   if (error) { showAuthError(error.message); return; }
 
-  // Reuse the OTP input step
   document.getElementById('authEmail').value = email;
   document.getElementById('otpEmailDisplay').textContent = email;
   showAuthStep('stepOtpCode');
   setTimeout(() => document.querySelector('.otp-digit')?.focus(), 150);
 }
 
-// ── OTP input UX ───────────────────────────────────────────────────────────
+// ── OTP digit-input UX ───────────────────────────────────────────────────────
 function initOtpInputs() {
   const inputs = [...document.querySelectorAll('.otp-digit')];
   inputs.forEach((input, idx) => {
@@ -107,13 +112,14 @@ function initOtpInputs() {
       if (e.key === 'Backspace' && !input.value && idx > 0) inputs[idx - 1].focus();
     });
     input.addEventListener('paste', e => {
-      const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text')
+        .replace(/\D/g, '').slice(0, 6);
       if (pasted.length === 6) {
         inputs.forEach((inp, i) => { inp.value = pasted[i] || ''; });
         inputs[5].focus();
         setTimeout(verifyOtpCode, 80);
       }
-      e.preventDefault();
     });
   });
 }
@@ -130,14 +136,15 @@ function clearOtp() {
   document.querySelector('.otp-digit')?.focus();
 }
 
-// ── Launch app ─────────────────────────────────────────────────────────────
+// ── Launch app ───────────────────────────────────────────────────────────────
 async function launchApp() {
   try {
     setUserAvatar();
     showScreen('screenApp');
     showLoader();
     buildEmojiPicker();
-    const [_] = await Promise.all([
+    // Minimum loader display time so the UI doesn't flash on fast connections.
+    await Promise.all([
       loadData(),
       new Promise(r => setTimeout(r, 2500)),
     ]);
@@ -154,7 +161,7 @@ async function launchApp() {
   }
 }
 
-// ── User menu ──────────────────────────────────────────────────────────────
+// ── User menu ────────────────────────────────────────────────────────────────
 function setUserAvatar() {
   const email  = currentUser?.email || '';
   const letter = email.charAt(0).toUpperCase();
@@ -164,11 +171,25 @@ function setUserAvatar() {
   if (menuEmail) menuEmail.textContent = email;
 }
 
+function buildSignedOutMenu(menu) {
+  // Default menu: email + "Se déconnecter".
+  const email   = currentUser?.email || '';
+  const divider = el('div', { class: 'user-menu-divider' });
+  const emailEl = el('div', { class: 'user-menu-email', text: email });
+  const signOutBtn = el('button',
+    { class: 'user-menu-item danger', text: 'Se déconnecter', onClick: confirmSignOut });
+  replaceChildren(menu, emailEl, divider, signOutBtn);
+}
+
 function toggleUserMenu() {
   const menu   = document.getElementById('userMenu');
   const isOpen = menu.style.display !== 'none';
-  menu.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) setTimeout(() => document.addEventListener('click', closeUserMenu, { once: true }), 10);
+  if (isOpen) { menu.style.display = 'none'; return; }
+
+  buildSignedOutMenu(menu);
+  menu.style.display = 'block';
+  // Close on next outside click.
+  setTimeout(() => document.addEventListener('click', closeUserMenu, { once: true }), 10);
 }
 
 function closeUserMenu() {
@@ -176,16 +197,16 @@ function closeUserMenu() {
   if (menu) menu.style.display = 'none';
 }
 
+// Inline confirm UI — no HTML injection, no inline onclick.
 function confirmSignOut() {
-  closeUserMenu();
   const menu = document.getElementById('userMenu');
+  if (!menu) return;
+  const title  = el('p', { class: 'user-menu-confirm', text: 'Se déconnecter ?' });
+  const yes    = el('button', { class: 'user-menu-item danger', text: 'Oui, déconnexion', onClick: doSignOut });
+  const cancel = el('button', { class: 'user-menu-item',         text: 'Annuler',         onClick: closeUserMenu });
+  const row    = el('div', { class: 'user-menu-confirm-row' }, yes, cancel);
+  replaceChildren(menu, title, row);
   menu.style.display = 'block';
-  menu.innerHTML = `
-    <p class="user-menu-confirm">Se déconnecter ?</p>
-    <div class="user-menu-confirm-row">
-      <button class="user-menu-item danger" onclick="doSignOut()">Oui, déconnexion</button>
-      <button class="user-menu-item" onclick="closeUserMenu()">Annuler</button>
-    </div>`;
 }
 
 async function doSignOut() {
@@ -199,15 +220,13 @@ async function doSignOut() {
   showAuthStep('stepEmail');
 }
 
-async function signOut() { await doSignOut(); }
-
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Generic helpers ──────────────────────────────────────────────────────────
 function showAuthError(msg) {
-  const el = document.getElementById('authError');
-  if (!el) return;
-  el.textContent    = msg;
-  el.style.display  = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 3500);
+  const errEl = document.getElementById('authError');
+  if (!errEl) return;
+  errEl.textContent   = msg; // textContent — safe
+  errEl.style.display = 'block';
+  setTimeout(() => { errEl.style.display = 'none'; }, 3500);
 }
 
 function setAuthLoading(on) {

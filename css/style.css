@@ -520,20 +520,48 @@ button, input, a, [onclick] { touch-action: manipulation; }
 .btn-ghost   { background: #f3f4f6; color: var(--text); }
 
 /* ── Print ───────────────────────────────────────────────────────────── */
+/* `html.printing` is set just before window.print() runs (see calendar.js)
+   so the whole month + header stay visible. Without these overrides the body
+   is clipped to 100dvh and only the first portion of the calendar prints. */
 @media print {
-  body { max-width: 100%; margin: 0; background: white; }
-  .header, .bottom-bar, .bottom-spacer, .batch-counter, .overlay, .bottom-sheet, .toast { display: none !important; }
+  html, body {
+    height: auto !important; max-height: none !important;
+    overflow: visible !important; max-width: 100% !important;
+    margin: 0; background: white;
+  }
+  #screenApp,
+  .calendar-container {
+    height: auto !important; min-height: 0 !important;
+    overflow: visible !important; display: block !important;
+  }
+  .header, .bottom-bar, .bottom-spacer, .batch-counter, .overlay,
+  .bottom-sheet, .toast, .user-menu { display: none !important; }
   .month-nav-btn { display: none !important; }
-  .month-nav { justify-content: center; padding: 10px 0; }
-  .month-nav h2 { font-size: 28px; }
+  .month-nav {
+    display: flex !important; justify-content: center;
+    padding: 10px 0 6px; page-break-after: avoid;
+  }
+  .month-nav h2 { font-size: 26px; }
+  .month-label { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .weekday-header { display: grid !important; }
   .calendar-container { padding: 0; }
-  .calendar-grid { gap: 0; }
-  .day-cell { min-height: 70px; border-radius: 0; border: 1px solid #ccc !important; opacity: 1 !important; box-shadow: none !important; }
+  .calendar-grid { gap: 0; grid-auto-rows: minmax(72px, auto); }
+  .day-cell {
+    min-height: 70px; border-radius: 0;
+    border: 1px solid #ccc !important;
+    opacity: 1 !important; box-shadow: none !important;
+    page-break-inside: avoid;
+  }
   .day-cell.past { opacity: 1 !important; }
   .day-cell.today { border: 2px solid #333 !important; }
-  .event-tag { font-size: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .day-events { gap: 1px; }
+  .event-tag {
+    font-size: 8px;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    animation: none !important;
+  }
   .weekday-header span { font-size: 10px; }
-  .print-legend { display: flex !important; }
+  .print-legend { display: flex !important; page-break-before: avoid; }
   .print-header { display: block !important; }
 }
 .print-legend {
