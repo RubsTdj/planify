@@ -1,121 +1,106 @@
 // ─── Supabase persistence ─────────────────────────────────────────────────────
-// All reads/writes go to Supabase. No localStorage used.
+// RLS on the tables restricts every query to the authenticated user
+// (see supabase/migration_auth.sql). We still attach `user_id = currentUser.id`
+// on writes — it's a belt-and-suspenders defence and required by the unique
+// constraint that includes user_id.
 
+function currentUserId() {
+  return currentUser?.id;
+}
+
+// Generic error reporter for storage writes. Postgres unique-violation (23505)
+// is intentionally swallowed for inserts since we treat duplicates as no-ops.
+function reportError(where, error, ignoreDuplicate = false) {
+  if (!error) return;
+  if (ignoreDuplicate && error.code === '23505') return;
+  console.error(where + ':', error);
+  showToast('⚠️ Erreur de sauvegarde');
+}
+
+// ── Load: fetch all events + custom types for the current user ───────────────
 async function loadData() {
+  const uid = currentUserId();
+  if (!uid) return;
+
   try {
-    const uid = currentUser?.id;
-
-    // Load events for this user
-    const { data: evtRows, error: e1 } = await sb
-      .from('events')
-      .select('date, type_id')
-      .eq('user_id', uid);
+    const [{ data: evtRows, error: e1 }, { data: ctRows, error: e2 }] = await Promise.all([
+      sb.from('events')
+        .select('date, type_id')
+        .eq('user_id', uid),
+      sb.from('custom_types')
+        .select('*')
+        .eq('user_id', uid)
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: true }),
+    ]);
     if (e1) throw e1;
-
-    events = {};
-    (evtRows || []).forEach(row => {
-      if (!events[row.date]) events[row.date] = [];
-      events[row.date].push(row.type_id);
-    });
-
-    // Load custom types for this user (not deleted)
-    const { data: ctRows, error: e2 } = await sb
-      .from('custom_types')
-      .select('*')
-      .eq('user_id', uid)
-      .eq('is_deleted', false)
-      .order('created_at', { ascending: true });
     if (e2) throw e2;
+
+    // Re-index events as { 'YYYY-MM-DD': [typeId, ...] }.
+    events = {};
+    for (const row of (evtRows || [])) {
+      (events[row.date] ||= []).push(row.type_id);
+    }
 
     DEFAULT_PRESETS.length = 0;
     customTypes = [];
-
-    (ctRows || []).forEach(row => {
+    for (const row of (ctRows || [])) {
       const t = dbRowToCustomType(row);
-      if (row.id.startsWith('preset_')) {
-        DEFAULT_PRESETS.push(t);
-      } else {
-        customTypes.push(t);
-      }
-    });
-
+      if (row.id.startsWith('preset_')) DEFAULT_PRESETS.push(t);
+      else                              customTypes.push(t);
+    }
   } catch (err) {
     console.error('Supabase loadData error:', err);
     showToast('⚠️ Erreur de connexion à la base de données');
   }
 }
 
-
-// Save a single day's event addition
+// ── Mutations ────────────────────────────────────────────────────────────────
 async function saveEventAdd(dateStr, typeId) {
-  const uid = currentUser?.id;
-  const { error } = await sb
-    .from('events')
-    .insert({ date: dateStr, type_id: typeId, user_id: uid });
-  if (error && error.code !== '23505') { // ignore duplicate
-    console.error('saveEventAdd:', error);
-    showToast('⚠️ Erreur de sauvegarde');
-  }
+  const { error } = await sb.from('events')
+    .insert({ date: dateStr, type_id: typeId, user_id: currentUserId() });
+  reportError('saveEventAdd', error, true);
 }
 
-// Remove a single event from a day
 async function saveEventRemove(dateStr, typeId) {
-  const uid = currentUser?.id;
-  const { error } = await sb
-    .from('events')
+  const { error } = await sb.from('events')
     .delete()
-    .eq('date', dateStr)
+    .eq('date',    dateStr)
     .eq('type_id', typeId)
-    .eq('user_id', uid);
-  if (error) { console.error('saveEventRemove:', error); showToast('⚠️ Erreur de sauvegarde'); }
+    .eq('user_id', currentUserId());
+  reportError('saveEventRemove', error);
 }
 
-// Batch insert: apply one typeId to many dates
 async function saveEventBatch(dates, typeId) {
-  const uid  = currentUser?.id;
+  const uid  = currentUserId();
   const rows = dates.map(d => ({ date: d, type_id: typeId, user_id: uid }));
-  const { error } = await sb
-    .from('events')
-    .insert(rows);
-  if (error && error.code !== '23505') {
-    console.error('saveEventBatch:', error);
-    showToast('⚠️ Erreur de sauvegarde');
-  }
+  const { error } = await sb.from('events').insert(rows);
+  reportError('saveEventBatch', error, true);
 }
 
-// Save a new custom event type
 async function saveCustomType(newType) {
-  const uid = currentUser?.id;
-  const row = { ...customTypeToDbRow(newType), user_id: uid };
-  const { error } = await sb
-    .from('custom_types')
-    .insert(row);
-  if (error && error.code !== '23505') {
-    console.error('saveCustomType:', error);
-    showToast('⚠️ Erreur de sauvegarde');
-  }
+  const row = { ...customTypeToDbRow(newType), user_id: currentUserId() };
+  const { error } = await sb.from('custom_types').insert(row);
+  reportError('saveCustomType', error, true);
 }
 
-// Delete a custom/preset type: hard delete from DB + clean up all events using it
+// Hard-delete a custom or preset type AND every event that referenced it.
 async function deleteCustomType(typeId) {
-  const uid = currentUser?.id;
-  const { error } = await sb
-    .from('custom_types')
+  const uid = currentUserId();
+  const { error: e1 } = await sb.from('custom_types')
     .delete()
     .eq('id', typeId)
     .eq('user_id', uid);
-  if (error) console.error('deleteCustomType:', error);
+  if (e1) console.error('deleteCustomType:', e1);
 
-  const { error: e2 } = await sb
-    .from('events')
+  const { error: e2 } = await sb.from('events')
     .delete()
     .eq('type_id', typeId)
     .eq('user_id', uid);
   if (e2) console.error('deleteCustomType events cleanup:', e2);
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
+// ── DB row ↔ in-memory type translation ──────────────────────────────────────
 function customTypeToDbRow(t) {
   return {
     id:         t.id,

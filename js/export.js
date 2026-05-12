@@ -1,28 +1,92 @@
-function exportICS() {
-  let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Planify//FR\n';
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+// ─── ICS export ───────────────────────────────────────────────────────────────
+// Builds an RFC 5545–compliant .ics file for the currently displayed month.
+// Key correctness points (previously broken):
+//   • Overnight shifts (e.g. Nuit 22:00 → 07:30) now span to the NEXT day,
+//     otherwise DTEND < DTSTART and calendars silently drop the event.
+//   • All TEXT properties are escaped (\, ; , and newlines).
+//   • Lines use CRLF + 75-octet folding.
+//   • Every VEVENT carries a stable UID and a DTSTAMP (some apps reject events
+//     missing these).
+//   • All-day events use DTEND = next day per the RFC (exclusive end).
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = formatDate(currentYear, currentMonth, d);
-    (events[dateStr] || []).forEach(evtId => {
-      const type = getEventType(evtId);
-      if (!type) return;
-      const dtStr = dateStr.replace(/-/g, '');
-      if (type.allDay) {
-        ics += `BEGIN:VEVENT\nDTSTART;VALUE=DATE:${dtStr}\nDTEND;VALUE=DATE:${dtStr}\nSUMMARY:${type.emoji} ${type.label}\nEND:VEVENT\n`;
-      } else {
-        const st = (type.startTime || '08:00').replace(':', '') + '00';
-        const et = (type.endTime   || '18:00').replace(':', '') + '00';
-        ics += `BEGIN:VEVENT\nDTSTART:${dtStr}T${st}\nDTEND:${dtStr}T${et}\nSUMMARY:${type.emoji} ${type.label}\nEND:VEVENT\n`;
-      }
-    });
+// Parse "YYYY-MM-DD" into a local Date (avoids the new Date(str) UTC pitfall).
+function parseISODate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// Build a single VEVENT for a (date, eventType) pair.
+function buildVEvent(dateStr, type, dtStamp) {
+  const start = parseISODate(dateStr);
+  const lines = ['BEGIN:VEVENT'];
+  // Stable UID: same (date, type) always yields the same UID across exports.
+  lines.push(`UID:${dateStr}-${type.id}@planify.local`);
+  lines.push(`DTSTAMP:${dtStamp}`);
+  lines.push(`SUMMARY:${icsEscape(`${type.emoji} ${type.label}`)}`);
+
+  if (type.allDay) {
+    // RFC 5545: DTEND is exclusive — use next day for a 1-day all-day event.
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    lines.push(`DTSTART;VALUE=DATE:${icsDate(start)}`);
+    lines.push(`DTEND;VALUE=DATE:${icsDate(end)}`);
+  } else {
+    const s = parseHM(type.startTime) || { h: 8,  m: 0  };
+    const e = parseHM(type.endTime)   || { h: 18, m: 0  };
+
+    const startDT = new Date(start);
+    startDT.setHours(s.h, s.m, 0, 0);
+
+    const endDT = new Date(start);
+    endDT.setHours(e.h, e.m, 0, 0);
+    // Overnight shift (e.g. Nuit 22:00 → 07:30): roll end into the next day.
+    if (isOvernightShift(type)) endDT.setDate(endDT.getDate() + 1);
+
+    lines.push(`DTSTART:${icsLocalDateTime(startDT)}`);
+    lines.push(`DTEND:${icsLocalDateTime(endDT)}`);
   }
 
-  ics += 'END:VCALENDAR';
-  const blob = new Blob([ics], { type: 'text/calendar' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `Planify_${MONTHS_FR[currentMonth]}_${currentYear}.ics`;
+  lines.push('END:VEVENT');
+  return lines;
+}
+
+// Trigger a download of the given Blob.
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
+  // Free the object URL on the next tick — the click has already started the
+  // download by then.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function exportICS() {
+  const dtStamp = icsUtcDateTime(new Date());
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Planify//FR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+  ];
+
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = formatDate(currentYear, currentMonth, d);
+    for (const evtId of (events[dateStr] || [])) {
+      const type = getEventType(evtId);
+      if (!type) continue;
+      lines.push(...buildVEvent(dateStr, type, dtStamp));
+    }
+  }
+
+  lines.push('END:VCALENDAR');
+
+  const blob = new Blob([icsBuild(lines)], { type: 'text/calendar;charset=utf-8' });
+  downloadBlob(blob, `Planify_${MONTHS_FR[currentMonth]}_${currentYear}.ics`);
   showToast('📅 Fichier .ics téléchargé !');
 }

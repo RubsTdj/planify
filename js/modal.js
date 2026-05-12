@@ -1,42 +1,59 @@
+// ─── Custom event creation modal ──────────────────────────────────────────────
+// Bottom sheet for creating a user-defined event type (custom_*). Stores the
+// in-progress selection in module-local state, then commits via storage on
+// save.
+
 let customTypes      = [];
 let selectedEmoji    = '';
 let selectedDuration = 'allday';
 let selectedHalfDay  = 'morning';
 
+// ── Emoji picker ─────────────────────────────────────────────────────────────
 function buildEmojiPicker() {
   const picker = document.getElementById('emojiPicker');
-  picker.innerHTML = '';
-  EMOJI_OPTIONS.forEach((e, i) => {
-    const opt = document.createElement('div');
-    opt.className = `emoji-option${i === 0 ? ' selected' : ''}`;
-    opt.textContent = e;
-    opt.addEventListener('click', function () { selectEmoji(e, this); });
-    picker.appendChild(opt);
+  const options = EMOJI_OPTIONS.map((emoji, i) => {
+    const opt = el('div', {
+      class: `emoji-option${i === 0 ? ' selected' : ''}`,
+      text:  emoji,
+    });
+    opt.addEventListener('click', () => selectEmoji(emoji, opt));
+    return opt;
   });
+  replaceChildren(picker, ...options);
   selectedEmoji = EMOJI_OPTIONS[0];
 }
 
-function selectEmoji(emoji, el) {
+function selectEmoji(emoji, target) {
   selectedEmoji = emoji;
   document.querySelectorAll('.emoji-option').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
+  target.classList.add('selected');
 }
 
-function selectDuration(dur, el) {
+// ── Duration selection (allday / half-day / custom range) ────────────────────
+function selectDuration(dur, target) {
   selectedDuration = dur;
   document.querySelectorAll('.duration-selector .duration-option').forEach(o => o.classList.remove('active'));
-  el.classList.add('active');
+  target.classList.add('active');
+
   const timeRow = document.getElementById('timeRowContainer');
   const halfSel = document.getElementById('halfDaySelector');
-  if (dur === 'custom')    { timeRow.classList.add('visible'); halfSel.style.display = 'none'; }
-  else if (dur === 'half') { timeRow.classList.remove('visible'); halfSel.style.display = 'flex'; }
-  else                     { timeRow.classList.remove('visible'); halfSel.style.display = 'none'; }
+
+  if (dur === 'custom') {
+    timeRow.classList.add('visible');
+    halfSel.style.display = 'none';
+  } else if (dur === 'half') {
+    timeRow.classList.remove('visible');
+    halfSel.style.display = 'flex';
+  } else {
+    timeRow.classList.remove('visible');
+    halfSel.style.display = 'none';
+  }
 }
 
-function selectHalfDay(half, el) {
+function selectHalfDay(half, target) {
   selectedHalfDay = half;
   document.querySelectorAll('.half-day-option').forEach(o => o.classList.remove('active'));
-  el.classList.add('active');
+  target.classList.add('active');
 }
 
 function resetDurationUI() {
@@ -48,6 +65,7 @@ function resetDurationUI() {
   document.getElementById('halfDaySelector').style.display = 'none';
 }
 
+// ── Open / close ─────────────────────────────────────────────────────────────
 function openCustomSheet() {
   closeSheet();
   selectedDuration = 'allday';
@@ -57,6 +75,7 @@ function openCustomSheet() {
   document.getElementById('customEnd').value   = '';
   resetDurationUI();
 
+  // Wait for the previous sheet's close animation before re-opening overlay.
   setTimeout(() => {
     document.getElementById('overlay').classList.add('visible');
     document.getElementById('customSheet').classList.add('visible');
@@ -68,13 +87,13 @@ function closeCustomSheet() {
   document.getElementById('customSheet').classList.remove('visible');
 }
 
-async function saveCustomEvent() {
-  const name = document.getElementById('customName').value.trim();
-  if (!name) { showToast('⚠️ Donne un nom'); return; }
-
+// ── Build a new custom type from current form state ──────────────────────────
+function buildCustomTypeFromForm(name) {
+  // Cap label length to avoid pathological inputs.
+  const safeName = name.slice(0, 60);
   const newType = {
     id:       'custom_' + Date.now(),
-    label:    name,
+    label:    safeName,
     emoji:    selectedEmoji,
     duration: selectedDuration,
     allDay:   selectedDuration === 'allday',
@@ -89,15 +108,26 @@ async function saveCustomEvent() {
     newType.allDay    = false;
     newType.startTime = document.getElementById('customStart').value || null;
     newType.endTime   = document.getElementById('customEnd').value   || null;
-    if (!newType.startTime) { newType.allDay = true; newType.duration = 'allday'; }
+    if (!newType.startTime) {
+      // No start time → fall back to all-day.
+      newType.allDay   = true;
+      newType.duration = 'allday';
+    }
   }
+  return newType;
+}
 
-  // Optimistic update
+async function saveCustomEvent() {
+  const rawName = document.getElementById('customName').value.trim();
+  if (!rawName) { showToast('⚠️ Donne un nom'); return; }
+
+  const newType = buildCustomTypeFromForm(rawName);
+
+  // Optimistic update — re-open the event sheet with the new type already there.
   customTypes.push(newType);
   closeCustomSheet();
   showToast(`${newType.emoji} ${newType.label} créé !`);
   if (selectedDate) setTimeout(() => openSheet(selectedDate, false), 400);
 
-  // Persist
   await saveCustomType(newType);
 }
