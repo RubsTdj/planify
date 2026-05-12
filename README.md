@@ -15,7 +15,7 @@ Export .ics pour Google Agenda / Apple Calendar.
 - Événements personnels (presets + création libre avec emoji)
 - Multi-select : appliquer un type sur plusieurs jours d'un coup
 - Suppression individuelle par jour ou par type
-- Export `.ics` (Google Agenda, Apple Calendar)
+- Lien d'abonnement calendrier (Google Agenda, Apple Calendar) — sync auto
 - Impression
 
 ## Structure
@@ -26,12 +26,18 @@ Planify/
 │   └── style.css    # Tous les styles (mobile-first, max-width 480px)
 ├── js/
 │   ├── app.js       # Initialisation
-│   ├── calendar.js  # Rendu du calendrier, navigation
+│   ├── auth.js      # OTP Supabase + menu utilisateur
+│   ├── calendar.js  # Rendu du calendrier, navigation, impression
+│   ├── config.js    # Client Supabase
+│   ├── modal.js     # Création d'événements perso
 │   ├── palette.js   # Types d'événements, constantes
 │   ├── sheet.js     # Bottom-sheets, chips, batch mode
-│   ├── modal.js     # Création d'événements perso
-│   ├── storage.js   # localStorage
-│   ├── export.js    # Export .ics
-│   └── toast.js     # Notifications toast
+│   ├── storage.js   # Persistance Supabase
+│   ├── subscribe.js # Lien d'abonnement calendrier (sync auto)
+│   ├── toast.js     # Notifications toast
+│   └── utils.js     # Helpers DOM + ICS partagés
+├── supabase/
+│   ├── functions/calendar-feed/   # Edge Function qui sert le .ics
+│   └── *.sql                      # Migrations
 └── README.md
 ```
