@@ -182,23 +182,50 @@ function buildPrintLegend() {
 
 // ── Print orchestration ───────────────────────────────────────────────────────
 // We re-render the grid with `forPrint=true` (all events as tags) JUST before
-// printing, then restore the screen view afterwards. The `print` class on
-// <html> lets CSS unlock the body height/overflow so the full month + header
-// stay on the page (previously the body was clipped to 100dvh).
+// printing, then restore the screen view afterwards.
+//
+// `window.print()` is synchronous on desktop Chrome/Firefox but on iOS Safari
+// it can return immediately. To stay robust on both, we subscribe ONCE to the
+// `beforeprint` / `afterprint` events: the browser fires `beforeprint` right
+// before painting the print preview (so we can swap the DOM) and `afterprint`
+// when the dialog closes (so we can restore). Then we still call
+// `window.print()` for browsers that don't trigger the events on their own.
+
+let printListenersAttached = false;
+
+function attachPrintListeners() {
+  if (printListenersAttached) return;
+  printListenersAttached = true;
+  window.addEventListener('beforeprint', () => {
+    document.documentElement.classList.add('printing');
+    renderCalendar(true);
+  });
+  window.addEventListener('afterprint', () => {
+    document.documentElement.classList.remove('printing');
+    renderCalendar(false);
+  });
+}
+
 function printCalendar() {
+  attachPrintListeners();
+
   const now = new Date();
   document.getElementById('printDate').textContent =
     `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} à ${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
-
   buildPrintLegend();
   showToast('🖨️ Préparation...');
 
+  // Pre-emptively swap to the print render — safety net for browsers that
+  // don't fire `beforeprint` (the listener will still no-op the class add).
   setTimeout(() => {
     document.documentElement.classList.add('printing');
     renderCalendar(true);
     window.print();
-    // Restore: remove the print flag and re-render normally.
-    document.documentElement.classList.remove('printing');
-    renderCalendar(false);
+    // If `afterprint` doesn't fire (some mobile browsers), restore manually
+    // shortly after — long enough for the dialog to have appeared.
+    setTimeout(() => {
+      document.documentElement.classList.remove('printing');
+      renderCalendar(false);
+    }, 1000);
   }, 300);
 }
