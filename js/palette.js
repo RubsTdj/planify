@@ -8,9 +8,9 @@ const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin',
 const DAYS_FR   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 
 // NOTE: les horaires des shifts Matin/Soir/Nuit sont **informatifs** —
-// `informationalTime: true` indique à export.js de les exporter en all-day
-// (avec l'horaire visible dans le titre) pour éviter tout chevauchement,
-// notamment Nuit qui passe minuit. Seuls les events custom non all-day
+// `informationalTime: true` indique à l'Edge Function `calendar-feed` de les
+// exporter en all-day dans le flux ICS, pour éviter tout chevauchement
+// (notamment Nuit qui passe minuit). Seuls les events custom non all-day
 // utilisent un vrai créneau horaire dans l'ICS.
 const EVENT_TYPES = [
   { id: 'matin',    label: 'Matin',    emoji: '☀️',  startTime: '08:00', endTime: '15:30', cssClass: 'matin',    tagClass: 'tag-matin',    category: 'work',     allDay: false, informationalTime: true },
