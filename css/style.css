@@ -519,6 +519,18 @@ button, input, a, [onclick] { touch-action: manipulation; }
 .btn-primary { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: white; }
 .btn-ghost   { background: #f3f4f6; color: var(--text); }
 
+/* ── Subscribe sheet ─────────────────────────────────────────────────── */
+.subscribe-url {
+  width: 100%; font-size: 12px; font-family: 'SFMono-Regular', 'Menlo', monospace;
+  color: var(--text); background: #f9fafb;
+  user-select: all; -webkit-user-select: all;
+}
+.subscribe-deeplink {
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+  width: 100%;
+}
+
 /* ── Print ───────────────────────────────────────────────────────────── */
 /* `html.printing` is set just before window.print() runs (see calendar.js)
    so the whole month + header stay visible. Without these overrides the body
@@ -535,7 +547,7 @@ button, input, a, [onclick] { touch-action: manipulation; }
     overflow: visible !important; display: block !important;
   }
   .header, .bottom-bar, .bottom-spacer, .batch-counter, .overlay,
-  .bottom-sheet, .toast, .user-menu { display: none !important; }
+  .bottom-sheet, .toast, .user-menu, #subscribeSheet { display: none !important; }
   .month-nav-btn { display: none !important; }
   .month-nav {
     display: flex !important; justify-content: center;

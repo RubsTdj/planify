@@ -84,6 +84,8 @@ function closeAllSheets() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('eventSheet').classList.remove('visible');
   document.getElementById('customSheet').classList.remove('visible');
+  const sub = document.getElementById('subscribeSheet');
+  if (sub) sub.classList.remove('visible');
   manageCustomMode = false;
 }
 

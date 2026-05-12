@@ -152,8 +152,9 @@ async function launchApp() {
     render();
     document.getElementById('overlay').addEventListener('click', closeAllSheets);
     document.getElementById('manageCustomBtn').addEventListener('click', toggleManageCustom);
-    initSwipeToClose(document.getElementById('eventSheet'),  closeSheet);
-    initSwipeToClose(document.getElementById('customSheet'), closeCustomSheet);
+    initSwipeToClose(document.getElementById('eventSheet'),     closeSheet);
+    initSwipeToClose(document.getElementById('customSheet'),    closeCustomSheet);
+    initSwipeToClose(document.getElementById('subscribeSheet'), closeSubscribeSheet);
   } catch (err) {
     console.error('launchApp error:', err);
     hideLoader();
@@ -172,13 +173,28 @@ function setUserAvatar() {
 }
 
 function buildSignedOutMenu(menu) {
-  // Default menu: email + "Se déconnecter".
   const email   = currentUser?.email || '';
-  const divider = el('div', { class: 'user-menu-divider' });
   const emailEl = el('div', { class: 'user-menu-email', text: email });
-  const signOutBtn = el('button',
-    { class: 'user-menu-item danger', text: 'Se déconnecter', onClick: confirmSignOut });
-  replaceChildren(menu, emailEl, divider, signOutBtn);
+
+  const subscribeBtn = el('button', {
+    class: 'user-menu-item',
+    text:  '📅 Synchroniser avec mon agenda',
+    onClick: openSubscribeSheet,
+  });
+  const signOutBtn = el('button', {
+    class: 'user-menu-item danger',
+    text:  'Se déconnecter',
+    onClick: confirmSignOut,
+  });
+
+  replaceChildren(
+    menu,
+    emailEl,
+    el('div', { class: 'user-menu-divider' }),
+    subscribeBtn,
+    el('div', { class: 'user-menu-divider' }),
+    signOutBtn,
+  );
 }
 
 function toggleUserMenu() {
