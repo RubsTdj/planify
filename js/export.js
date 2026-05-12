@@ -25,15 +25,12 @@ function buildVEvent(dateStr, type, dtStamp) {
 
   // Shifts dont l'horaire est purement informatif (Matin/Soir/Nuit) :
   // exportés en all-day pour éviter tout chevauchement (notamment Nuit qui
-  // passe minuit). L'horaire reste visible dans le titre.
+  // passe minuit). Le label suffit — l'horaire reste affiché dans l'app mais
+  // n'apparaît pas dans le titre du calendrier.
   const isInformational = type.informationalTime === true;
   const exportAsAllDay  = type.allDay || isInformational;
 
-  const summaryBase = `${type.emoji} ${type.label}`;
-  const summary = (isInformational && type.startTime && type.endTime)
-    ? `${summaryBase} (${type.startTime} → ${type.endTime})`
-    : summaryBase;
-  lines.push(`SUMMARY:${icsEscape(summary)}`);
+  lines.push(`SUMMARY:${icsEscape(`${type.emoji} ${type.label}`)}`);
 
   if (exportAsAllDay) {
     // RFC 5545: DTEND is exclusive — use next day for a 1-day all-day event.
