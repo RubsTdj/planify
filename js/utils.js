@@ -43,6 +43,15 @@ function icon(name, cls) {
   return svg;
 }
 
+// Contenu de la pastille d'un type : icône dessinée pour les shifts intégrés,
+// emoji pour les types perso qui en ont encore un (la saisie d'emoji a été
+// retirée), sinon l'initiale du libellé.
+function typeBadgeContent(type) {
+  if (type.icon)  return icon(type.icon);
+  if (type.emoji) return document.createTextNode(type.emoji);
+  return document.createTextNode((type.label || '?').trim().charAt(0).toUpperCase());
+}
+
 // Replace a container's children with the given nodes. Avoids `innerHTML =`.
 function replaceChildren(container, ...nodes) {
   container.replaceChildren(...nodes.filter(Boolean));

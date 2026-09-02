@@ -14,9 +14,8 @@ Export .ics pour Google Agenda / Apple Calendar.
 
 ## Fonctionnalités
 - Calendrier mensuel avec navigation
-- Shifts : Matin ☀️, Soir 🌇, Nuit 🌙
-- Repos 😴, Vacances 🏖️
-- Événements personnels (presets + création libre avec emoji)
+- Shifts : Matin, Soir, Nuit, Repos, Vacances
+- Événements personnels (création libre, le nom porte tout : plus de saisie d'emoji)
   - **Ponctuel** : posé directement sur le(s) jour(s), sans encombrer la palette
   - **Réutilisable** : gardé dans « mes types » pour le réappliquer plus tard
 - Multi-select : appliquer un type sur plusieurs jours d'un coup
@@ -27,6 +26,8 @@ Export .ics pour Google Agenda / Apple Calendar.
 - Carte de charge du mois : jours travaillés, répartition matin/soir/nuit, repos
 - Grille lue comme une carte de couleurs : le shift colore le numéro du jour,
   les autres événements s'affichent en toutes lettres sous le numéro
+- À l'impression et dans le flux ICS, tout redevient du texte : la couleur ne
+  traverse ni une imprimante noir et blanc ni un agenda externe
 - Impression
 
 ## Structure

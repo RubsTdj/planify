@@ -116,7 +116,7 @@ function buildCurrentEventItem(dateStr, evtId) {
   // Les shifts intégrés ont une icône dessinée ; les types perso gardent leur
   // emoji, c'est l'utilisatrice qui l'a choisi.
   const badge = el('div', { class: `cev-icon ${type.cssClass || 'custom'}` });
-  badge.append(type.icon ? icon(type.icon) : document.createTextNode(type.emoji));
+  badge.append(typeBadgeContent(type));
 
   const item = el('div', { class: 'current-event-item' },
     el('div', { class: 'current-event-left' },
@@ -149,7 +149,7 @@ function chipForBuiltin(type, isAlreadyAdded, isBatch) {
   const chip = el('div', {
     class: `event-chip ${type.cssClass}${(!isBatch && isAlreadyAdded) ? ' already-added' : ''}`,
   },
-    type.icon ? icon(type.icon) : el('span', { class: 'chip-emoji', text: type.emoji }),
+    type.icon ? icon(type.icon) : null,
     type.label, // safe: passed as text node via el()
   );
   if (!isAlreadyAdded || isBatch) {
@@ -166,7 +166,7 @@ function chipForCustom(type, isAlreadyAdded, isBatch, dateStr) {
 
   const deleteBtn = el('span', { class: 'chip-delete' }, icon('close'));
   const chip = el('div', { class: cls },
-    el('span', { class: 'chip-emoji', text: type.emoji }),
+    type.emoji ? el('span', { class: 'chip-emoji', text: type.emoji }) : null,
     type.label,
     deleteBtn,
   );
@@ -339,7 +339,7 @@ async function addEvent(typeId, isBatch) {
       if (!events[dateStr]) events[dateStr] = [];
       if (!events[dateStr].includes(typeId)) events[dateStr].push(typeId);
     });
-    showToast(`${type.emoji} ${type.label} → ${dates.length} jour(s)`);
+    showToast(`${type.label} → ${dates.length} jour(s)`);
     batchSelected.clear();
     batchMode = false;
     closeSheet();
@@ -353,7 +353,7 @@ async function addEvent(typeId, isBatch) {
   if (events[selectedDate].includes(typeId)) { closeSheet(); return; }
 
   events[selectedDate].push(typeId);
-  showToast(`${type.emoji} ${type.label} ajouté !`);
+  showToast(`${type.label} ajouté`);
   closeSheet();
   render();
   await saveEventAdd(selectedDate, typeId);
@@ -366,7 +366,7 @@ async function removeEventFromDay(dateStr, evtId) {
   delete animatedTags[dateStr + '|' + evtId];
 
   const type = getEventType(evtId);
-  showToast(`${type ? type.emoji + ' ' + type.label : 'Event'} retiré`);
+  showToast(`${type ? type.label : 'Événement'} retiré`);
   render();
 
   const dayEvents = events[dateStr] || [];

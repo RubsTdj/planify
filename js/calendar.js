@@ -163,8 +163,8 @@ function splitDayEvents(dayEvents) {
   return { primary, rest: dayEvents.filter(id => id !== primary) };
 }
 
-// Build one day cell. `forPrint=true` skips the overflow-dots cap so every
-// event is visible on the printed page.
+// Build one day cell. `forPrint=true` écrit tous les événements en toutes
+// lettres, y compris le shift qui ne colore que le numéro à l'écran.
 function buildDayCell(year, month, d, today, forPrint) {
   const dateStr   = formatDate(year, month, d);
   const dayDate   = new Date(year, month, d);
@@ -187,8 +187,11 @@ function buildDayCell(year, month, d, today, forPrint) {
     + (primary ? ' ' + primary : '')
     + (isToday && !primary ? ' plain' : '');
 
+  // À l'impression, le shift redevient une étiquette texte : la couleur du
+  // numéro ne survit pas à une imprimante noir et blanc, et le planning papier
+  // doit se lire sans légende.
   const eventsContainer = el('div', { class: 'day-events' });
-  const shown = forPrint ? rest : rest.slice(0, MAX_TAGS_SCREEN);
+  const shown = forPrint ? dayEvents : rest.slice(0, MAX_TAGS_SCREEN);
   shown.forEach(evtId => {
     const type = getEventType(evtId);
     if (type) eventsContainer.append(buildEventTag(type, dateStr));
@@ -270,7 +273,7 @@ function buildPrintLegend() {
     const type = getEventType(t.id);
     if (!type) return null;
     const badge = el('div', { class: 'print-legend-color ' + (type.tagClass || 'tag-custom') });
-    badge.append(type.icon ? icon(type.icon) : document.createTextNode(type.emoji));
+    badge.append(typeBadgeContent(type));
     return el('div', { class: 'print-legend-item' }, badge, el('span', { text: type.label }));
   }).filter(Boolean);
   replaceChildren(document.getElementById('printLegend'), ...items);

@@ -4,34 +4,12 @@
 // save.
 
 let customTypes      = [];
-let selectedEmoji    = '';
 let selectedDuration = 'allday';
 let selectedHalfDay  = 'morning';
 // Jour(s) sur le(s)quel(s) l'événement sera posé, figé à l'ouverture du sheet.
 // Sans cible, l'événement ne peut être que réutilisable (sinon il serait
 // invisible : ni chip dans la palette, ni jour dans le planning).
 let pendingTarget    = null;
-
-// ── Emoji picker ─────────────────────────────────────────────────────────────
-function buildEmojiPicker() {
-  const picker = document.getElementById('emojiPicker');
-  const options = EMOJI_OPTIONS.map((emoji, i) => {
-    const opt = el('div', {
-      class: `emoji-option${i === 0 ? ' selected' : ''}`,
-      text:  emoji,
-    });
-    opt.addEventListener('click', () => selectEmoji(emoji, opt));
-    return opt;
-  });
-  replaceChildren(picker, ...options);
-  selectedEmoji = EMOJI_OPTIONS[0];
-}
-
-function selectEmoji(emoji, target) {
-  selectedEmoji = emoji;
-  document.querySelectorAll('.emoji-option').forEach(e => e.classList.remove('selected'));
-  target.classList.add('selected');
-}
 
 // ── Duration selection (allday / half-day / custom range) ────────────────────
 function selectDuration(dur, target) {
@@ -123,7 +101,7 @@ function buildCustomTypeFromForm(name) {
   const newType = {
     id:       'custom_' + Date.now(),
     label:    safeName,
-    emoji:    selectedEmoji,
+    emoji:    '',   // plus de saisie d'emoji : le nom porte tout
     duration: selectedDuration,
     allDay:   selectedDuration === 'allday',
   };
@@ -180,9 +158,9 @@ async function saveCustomEvent() {
   closeCustomSheet();
 
   if (target) {
-    showToast(`${newType.emoji} ${newType.label} → ${describeTarget(target)}`);
+    showToast(`${newType.label} → ${describeTarget(target)}`);
   } else {
-    showToast(`${newType.emoji} ${newType.label} créé !`);
+    showToast(`« ${newType.label} » créé`);
   }
 
   await saveCustomType(newType, !keep);

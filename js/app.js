@@ -10,7 +10,6 @@ async function init() {
   currentMonth = now.getMonth();
   currentYear  = now.getFullYear();
 
-  buildEmojiPicker();
   await initAuth();
 }
 

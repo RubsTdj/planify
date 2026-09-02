@@ -142,8 +142,7 @@ async function launchApp() {
     setUserAvatar();
     showScreen('screenApp');
     showLoader();
-    buildEmojiPicker();
-    // Minimum loader display time so the UI doesn't flash on fast connections.
+      // Minimum loader display time so the UI doesn't flash on fast connections.
     await Promise.all([
       loadData(),
       new Promise(r => setTimeout(r, 2500)),

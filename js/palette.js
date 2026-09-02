@@ -13,11 +13,11 @@ const DAYS_FR   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Sam
 // (notamment Nuit qui passe minuit). Seuls les events custom non all-day
 // utilisent un vrai créneau horaire dans l'ICS.
 const EVENT_TYPES = [
-  { id: 'matin', icon: 'matin',    label: 'Matin',    emoji: '☀️',  startTime: '08:00', endTime: '15:30', cssClass: 'matin',    tagClass: 'tag-matin',    category: 'work',     allDay: false, informationalTime: true },
-  { id: 'soir', icon: 'soir',     label: 'Soir',     emoji: '🌇',  startTime: '14:00', endTime: '22:30', cssClass: 'soir',     tagClass: 'tag-soir',     category: 'work',     allDay: false, informationalTime: true },
-  { id: 'nuit', icon: 'nuit',     label: 'Nuit',     emoji: '🌙',  startTime: '22:00', endTime: '07:30', cssClass: 'nuit',     tagClass: 'tag-nuit',     category: 'work',     allDay: false, informationalTime: true },
-  { id: 'repos', icon: 'repos',    label: 'Repos',    emoji: '😴',                                        cssClass: 'repos',    tagClass: 'tag-repos',    category: 'off',      allDay: true  },
-  { id: 'vacances', icon: 'vacances', label: 'Vacances', emoji: '🏖️',                                        cssClass: 'vacances', tagClass: 'tag-vacances', category: 'vacation', allDay: true  },
+  { id: 'matin', icon: 'matin',    label: 'Matin',    startTime: '08:00', endTime: '15:30', cssClass: 'matin',    tagClass: 'tag-matin',    category: 'work',     allDay: false, informationalTime: true },
+  { id: 'soir', icon: 'soir',     label: 'Soir',     startTime: '14:00', endTime: '22:30', cssClass: 'soir',     tagClass: 'tag-soir',     category: 'work',     allDay: false, informationalTime: true },
+  { id: 'nuit', icon: 'nuit',     label: 'Nuit',     startTime: '22:00', endTime: '07:30', cssClass: 'nuit',     tagClass: 'tag-nuit',     category: 'work',     allDay: false, informationalTime: true },
+  { id: 'repos', icon: 'repos',    label: 'Repos',    cssClass: 'repos',    tagClass: 'tag-repos',    category: 'off',      allDay: true  },
+  { id: 'vacances', icon: 'vacances', label: 'Vacances', cssClass: 'vacances', tagClass: 'tag-vacances', category: 'vacation', allDay: true  },
 ];
 
 // Populated at runtime from Supabase custom_types where id starts with 'preset_'.
@@ -30,8 +30,6 @@ const DEFAULT_PRESETS = [];
 //   1) l'utilisateur retire le type de sa liste alors que des jours l'utilisent
 //   2) l'événement a été créé en mode "ponctuel" (jamais mis dans la palette)
 let archivedTypes = [];
-
-const EMOJI_OPTIONS = ['📋','🏃','💊','🧘','🎓','🚗','🛒','🎂','❤️','🔔','💈','📞','🏠','🎉','☕','🍴','🗼','💪','✨','💅','🐶','🎵','📚','✈️'];
 
 // Resolve an event id to its full type definition. Order matters: built-ins
 // win over presets, which win over user-defined customs. Perso types are

@@ -78,7 +78,6 @@ function isOvernightShift(type: EventType): boolean {
 interface EventType {
   id: string;
   label: string;
-  emoji: string;
   allDay: boolean;
   startTime?: string | null;
   endTime?: string | null;
@@ -86,11 +85,11 @@ interface EventType {
 }
 
 const BUILTIN_TYPES: Record<string, EventType> = {
-  matin:    { id: 'matin',    label: 'Matin',    emoji: '☀️',  allDay: false, startTime: '08:00', endTime: '15:30', informationalTime: true },
-  soir:     { id: 'soir',     label: 'Soir',     emoji: '🌇',  allDay: false, startTime: '14:00', endTime: '22:30', informationalTime: true },
-  nuit:     { id: 'nuit',     label: 'Nuit',     emoji: '🌙',  allDay: false, startTime: '22:00', endTime: '07:30', informationalTime: true },
-  repos:    { id: 'repos',    label: 'Repos',    emoji: '😴',  allDay: true },
-  vacances: { id: 'vacances', label: 'Vacances', emoji: '🏖️',  allDay: true },
+  matin:    { id: 'matin',    label: 'Matin',    allDay: false, startTime: '08:00', endTime: '15:30', informationalTime: true },
+  soir:     { id: 'soir',     label: 'Soir',     allDay: false, startTime: '14:00', endTime: '22:30', informationalTime: true },
+  nuit:     { id: 'nuit',     label: 'Nuit',     allDay: false, startTime: '22:00', endTime: '07:30', informationalTime: true },
+  repos:    { id: 'repos',    label: 'Repos',    allDay: true },
+  vacances: { id: 'vacances', label: 'Vacances', allDay: true },
 };
 
 // ── ICS document builder ─────────────────────────────────────────────────────
@@ -106,7 +105,9 @@ function buildVEvent(dateStr: string, type: EventType, dtStamp: string): string[
   // needing per-event state in DB.
   const dayStamp = Math.floor(Date.now() / 86400000);
   lines.push(`SEQUENCE:${dayStamp}`);
-  lines.push(`SUMMARY:${icsEscape(`${type.emoji} ${type.label}`)}`);
+  // Le libellé seul : la couleur du shift ne traverse pas l'ICS, et l'app ne
+  // saisit plus d'emoji (si l'utilisatrice en veut un, elle l'écrit dans le nom).
+  lines.push(`SUMMARY:${icsEscape(type.label)}`);
 
   const exportAsAllDay = type.allDay || type.informationalTime === true;
 
@@ -135,7 +136,7 @@ function buildVEvent(dateStr: string, type: EventType, dtStamp: string): string[
 
 interface EventRow { date: string; type_id: string }
 interface CustomTypeRow {
-  id: string; label: string; emoji: string;
+  id: string; label: string;
   all_day: boolean; start_time: string | null; end_time: string | null;
 }
 
@@ -146,7 +147,6 @@ function buildCalendar(eventRows: EventRow[], customRows: CustomTypeRow[]): stri
     customMap[r.id] = {
       id:        r.id,
       label:     r.label,
-      emoji:     r.emoji,
       allDay:    r.all_day,
       startTime: r.start_time,
       endTime:   r.end_time,
@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
     // Pas de filtre sur is_deleted : un type archivé (retiré de la palette ou
     // créé en "ponctuel") reste référencé par des jours du planning, ses
     // événements doivent continuer à sortir dans le flux.
-    admin.from('custom_types').select('id, label, emoji, all_day, start_time, end_time')
+    admin.from('custom_types').select('id, label, all_day, start_time, end_time')
       .eq('user_id', userId),
   ]);
 
