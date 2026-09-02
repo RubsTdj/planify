@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Planify">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=7">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
@@ -27,7 +27,7 @@
       <circle class="ld ld6 ld-today" cx="52" cy="48" r="6" fill="white"/>
       <defs>
         <linearGradient id="grad-loader" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+          <stop stop-color="#0A84FF"/><stop offset="1" stop-color="#0060DF"/>
         </linearGradient>
       </defs>
     </svg>
@@ -49,7 +49,7 @@
         <circle cx="41" cy="39" r="5.5" fill="white"/>
         <defs>
           <linearGradient id="ga" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+            <stop stop-color="#0A84FF"/><stop offset="1" stop-color="#0060DF"/>
           </linearGradient>
         </defs>
       </svg>
@@ -117,7 +117,7 @@
         <circle cx="23" cy="22" r="3" fill="white"/>
         <defs>
           <linearGradient id="grad-logo" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+            <stop stop-color="#0A84FF"/><stop offset="1" stop-color="#0060DF"/>
           </linearGradient>
         </defs>
       </svg>
@@ -141,13 +141,16 @@
 
   <!-- Month navigation -->
   <div class="month-nav">
-    <button class="month-nav-btn" onclick="changeMonth(-1)">◀</button>
+    <button class="month-nav-btn" onclick="changeMonth(-1)" aria-label="Mois précédent">‹</button>
     <h2>
       <span class="month-label" id="monthLabel"></span>
       <span class="year-label" id="yearLabel"></span>
     </h2>
-    <button class="month-nav-btn" onclick="changeMonth(1)">▶</button>
+    <button class="month-nav-btn" onclick="changeMonth(1)" aria-label="Mois suivant">›</button>
   </div>
+
+  <!-- Résumé du mois affiché (construit par calendar.js) -->
+  <div class="month-summary" id="monthSummary"></div>
 
   <!-- Calendar -->
   <div class="calendar-container" id="calendarContainer">
@@ -283,17 +286,17 @@
 </div><!-- /screenApp -->
 
 <!-- Scripts — load order matters -->
-<script src="js/config.js?v=6"></script>
-<script src="js/utils.js?v=6"></script>
-<script src="js/palette.js?v=6"></script>
-<script src="js/storage.js?v=6"></script>
-<script src="js/toast.js?v=6"></script>
-<script src="js/calendar.js?v=6"></script>
-<script src="js/sheet.js?v=6"></script>
-<script src="js/modal.js?v=6"></script>
-<script src="js/auth.js?v=6"></script>
-<script src="js/subscribe.js?v=6"></script>
-<script src="js/app.js?v=6"></script>
+<script src="js/config.js?v=7"></script>
+<script src="js/utils.js?v=7"></script>
+<script src="js/palette.js?v=7"></script>
+<script src="js/storage.js?v=7"></script>
+<script src="js/toast.js?v=7"></script>
+<script src="js/calendar.js?v=7"></script>
+<script src="js/sheet.js?v=7"></script>
+<script src="js/modal.js?v=7"></script>
+<script src="js/auth.js?v=7"></script>
+<script src="js/subscribe.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
 
 </body>
 </html>

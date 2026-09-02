@@ -67,7 +67,7 @@ function openSheet(dateStr, isBatch) {
     divider.style.display        = hasAny ? 'block' : 'none';
     if (hasAny) renderCurrentEvents(dateStr, dayEvents);
   } else {
-    document.getElementById('sheetTitle').textContent = `⚡ Appliquer à ${batchSelected.size} jour(s)`;
+    document.getElementById('sheetTitle').textContent = `Appliquer à ${batchSelected.size} jour(s)`;
     document.getElementById('sheetDate').textContent  = 'Sélection multiple';
     currentSection.style.display = 'none';
     divider.style.display        = 'none';
@@ -204,8 +204,7 @@ function buildChips(dateStr, isBatch) {
     .filter(Boolean);
 
   const addNewChip = el('div', { class: 'event-chip custom add-new', onClick: openCustomSheet },
-    el('span', { class: 'chip-emoji', text: '➕' }),
-    ' Nouveau...',
+    '+ Nouveau',
   );
   replaceChildren(customContainer, ...customChips, addNewChip);
 
@@ -214,7 +213,7 @@ function buildChips(dateStr, isBatch) {
   const hasPerso  = getAllPersoTypes().length > 0;
   manageBtn.style.display = hasPerso ? 'inline-flex' : 'none';
   manageBtn.classList.toggle('active', manageCustomMode);
-  manageBtn.textContent = manageCustomMode ? '✓ Terminé' : '🗑️ Gérer mes types';
+  manageBtn.textContent = manageCustomMode ? 'Terminé' : 'Gérer mes types';
 }
 
 function createChip(type, isAlreadyAdded, isBatch) {
@@ -236,17 +235,17 @@ function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
 
   const yes = el('button', {
     class: 'confirm-yes',
-    style: 'padding:4px 10px;border-radius:8px;border:none;background:#dc2626;color:white;font-weight:700;font-size:12px;cursor:pointer;margin-left:6px;',
+    style: 'padding:4px 11px;border-radius:8px;border:none;background:#FF3B30;color:white;font-weight:600;font-size:13px;cursor:pointer;margin-left:6px;',
     text: 'Oui',
   });
   const no = el('button', {
     class: 'confirm-no',
-    style: 'padding:4px 10px;border-radius:8px;border:none;background:#e5e7eb;color:#374151;font-weight:700;font-size:12px;cursor:pointer;margin-left:4px;',
+    style: 'padding:4px 11px;border-radius:8px;border:none;background:#E5E5EA;color:#000;font-weight:500;font-size:13px;cursor:pointer;margin-left:4px;',
     text: 'Non',
   });
   // "Retirer" et pas "Supprimer" : les jours déjà planifiés ne bougent pas.
   const prompt = el('span',
-    { style: 'font-size:12px;font-weight:700;color:#dc2626;flex:1;', text: 'Retirer ?' });
+    { style: 'font-size:13px;font-weight:600;color:#FF3B30;flex:1;', text: 'Retirer ?' });
 
   replaceChildren(chip, prompt, yes, no);
 
@@ -400,26 +399,26 @@ function updateBatchUI() {
   const bottomBar = document.getElementById('bottomBar');
 
   if (batchMode && batchSelected.size > 0) {
-    counter.textContent = `⚡ ${batchSelected.size} jour(s) sélectionné(s)`;
+    counter.textContent = `${batchSelected.size} jour(s) sélectionné(s)`;
     counter.classList.add('visible');
     replaceChildren(bottomBar,
-      el('button', { class: 'batch-btn active', text: '✕ Annuler', onClick: toggleBatchMode }),
-      el('button', { class: 'batch-btn apply',  text: `✓ Appliquer (${batchSelected.size})`, onClick: openBatchSheet }),
+      el('button', { class: 'batch-btn active', text: 'Annuler', onClick: toggleBatchMode }),
+      el('button', { class: 'batch-btn apply',  text: `Appliquer (${batchSelected.size})`, onClick: openBatchSheet }),
     );
   } else if (batchMode) {
-    counter.textContent = '⚡ Sélectionnez des jours';
+    counter.textContent = 'Sélectionnez des jours';
     counter.classList.add('visible');
     replaceChildren(bottomBar,
-      el('button', { class: 'batch-btn active', text: '✕ Annuler', onClick: toggleBatchMode }),
-      el('button', { class: 'batch-btn', text: '✓ Appliquer',
+      el('button', { class: 'batch-btn active', text: 'Annuler', onClick: toggleBatchMode }),
+      el('button', { class: 'batch-btn', text: 'Appliquer',
                      style: 'opacity:0.4;cursor:default;',
                      attrs: { disabled: 'disabled' } }),
     );
   } else {
     counter.classList.remove('visible');
     replaceChildren(bottomBar,
-      el('button', { class: 'batch-btn today-btn',       text: '📍 Aujourd\'hui',  onClick: goToday }),
-      el('button', { class: 'batch-btn multiselect-btn', text: '⚡ Multi-select',  onClick: toggleBatchMode }),
+      el('button', { class: 'batch-btn today-btn',       text: 'Aujourd\'hui',       onClick: goToday }),
+      el('button', { class: 'batch-btn multiselect-btn', text: 'Sélection multiple', onClick: toggleBatchMode }),
     );
   }
 }

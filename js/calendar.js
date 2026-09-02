@@ -13,13 +13,18 @@ const MAX_TAGS_SCREEN = 2;
 
 // Dot indicator colours used when a day overflows past MAX_TAGS_SCREEN.
 const DOT_COLORS = {
-  matin:    '#fbbf24',
-  soir:     '#a78bfa',
-  nuit:     '#818cf8',
-  repos:    '#34d399',
-  vacances: '#22d3ee',
-  custom:   '#9ca3af',
+  matin:    '#FF9500',
+  soir:     '#FF375F',
+  nuit:     '#5856D6',
+  repos:    '#34C759',
+  vacances: '#30B0C7',
+  custom:   '#AEAEB2',
 };
+
+// Types comptés dans le résumé du mois, dans cet ordre. Vacances n'apparaît
+// que si le mois affiché en contient : sinon la ligne resterait à cinq
+// colonnes pour rien sur un écran de 375px.
+const SUMMARY_TYPES = ['matin', 'soir', 'nuit', 'repos', 'vacances'];
 
 function getDotColor(typeId) {
   return DOT_COLORS[typeId] || DOT_COLORS.custom;
@@ -37,8 +42,40 @@ function render() {
   if (monthEl) monthEl.textContent = MONTHS_FR[currentMonth];
   if (yearEl)  yearEl.textContent  = currentYear;
 
+  renderMonthSummary();
   renderCalendar();
   updateBatchUI();
+}
+
+// ── Résumé du mois ───────────────────────────────────────────────────────────
+// Combien de matins, soirs, nuits et repos sur le mois affiché. Rien de
+// nouveau en base : c'est un décompte de `events` sur le préfixe du mois.
+function countByTypeForMonth() {
+  const prefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-`;
+  const counts = {};
+  for (const dateStr in events) {
+    if (!dateStr.startsWith(prefix)) continue;
+    for (const typeId of events[dateStr]) counts[typeId] = (counts[typeId] || 0) + 1;
+  }
+  return counts;
+}
+
+function renderMonthSummary() {
+  const box = document.getElementById('monthSummary');
+  if (!box) return;
+
+  const counts = countByTypeForMonth();
+  const items = SUMMARY_TYPES
+    .filter(id => id !== 'vacances' || counts.vacances)
+    .map(id => {
+      const type = getEventType(id);
+      const n    = counts[id] || 0;
+      return el('div', { class: 'ms-item' },
+        el('span', { class: `ms-count ${id}${n === 0 ? ' zero' : ''}`, text: n }),
+        el('span', { class: 'ms-label', text: type ? type.label : id }),
+      );
+    });
+  replaceChildren(box, ...items);
 }
 
 // ── Helpers used by the cell renderer ────────────────────────────────────────
