@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Planify">
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=6">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
@@ -213,6 +213,7 @@
     <div class="sheet-handle"></div>
     <div class="modal-content">
       <h3>✨ Nouvel événement</h3>
+      <p class="modal-sub" id="customTargetLabel"></p>
       <div class="form-group">
         <label>Nom</label>
         <input type="text" class="form-input" id="customName" placeholder="Ex: Formation, RDV...">
@@ -220,21 +221,6 @@
       <div class="form-group">
         <label>Emoji</label>
         <div class="emoji-picker" id="emojiPicker"></div>
-      </div>
-      <div class="form-group" id="scopeGroup">
-        <label>Type d'événement</label>
-        <div class="scope-selector">
-          <div class="duration-option active" data-scope="once" onclick="selectScope('once', this)">
-            <span class="dur-emoji">⚡</span>
-            <span class="dur-label">Ponctuel</span>
-            <span class="dur-desc" id="scopeOnceDesc"></span>
-          </div>
-          <div class="duration-option" data-scope="keep" onclick="selectScope('keep', this)">
-            <span class="dur-emoji">♻️</span>
-            <span class="dur-label">Réutilisable</span>
-            <span class="dur-desc">Gardé dans mes types</span>
-          </div>
-        </div>
       </div>
       <div class="form-group">
         <label>Durée</label>
@@ -280,6 +266,10 @@
           </div>
         </div>
       </div>
+      <label class="scope-row" id="scopeGroup">
+        <span>♻️ Garder dans mes types</span>
+        <input type="checkbox" id="customKeep" class="scope-switch">
+      </label>
       <div class="form-actions">
         <button class="btn btn-ghost" onclick="closeCustomSheet()">Annuler</button>
         <button class="btn btn-primary" onclick="saveCustomEvent()">Ajouter</button>
@@ -293,17 +283,17 @@
 </div><!-- /screenApp -->
 
 <!-- Scripts — load order matters -->
-<script src="js/config.js?v=5"></script>
-<script src="js/utils.js?v=5"></script>
-<script src="js/palette.js?v=5"></script>
-<script src="js/storage.js?v=5"></script>
-<script src="js/toast.js?v=5"></script>
-<script src="js/calendar.js?v=5"></script>
-<script src="js/sheet.js?v=5"></script>
-<script src="js/modal.js?v=5"></script>
-<script src="js/auth.js?v=5"></script>
-<script src="js/subscribe.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/utils.js?v=6"></script>
+<script src="js/palette.js?v=6"></script>
+<script src="js/storage.js?v=6"></script>
+<script src="js/toast.js?v=6"></script>
+<script src="js/calendar.js?v=6"></script>
+<script src="js/sheet.js?v=6"></script>
+<script src="js/modal.js?v=6"></script>
+<script src="js/auth.js?v=6"></script>
+<script src="js/subscribe.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
 
 </body>
 </html>
