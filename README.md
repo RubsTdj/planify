@@ -23,10 +23,13 @@ Export .ics pour Google Agenda / Apple Calendar.
 - Retrait d'un type de la palette **sans toucher aux jours déjà planifiés**
   (le type est archivé, puis supprimé pour de bon quand plus aucun jour ne l'utilise)
 - Lien d'abonnement calendrier (Google Agenda, Apple Calendar) — sync auto
-- **Partage de planning entre comptes** : code d'invitation à usage unique,
-  lecture seule, périmètre au choix (shifts seuls ou tout), révocable des deux
-  côtés. Les règles d'accès vivent dans les politiques RLS, pas dans le front
-  (voir `supabase/migration_sharing.sql`)
+- **Planning d'équipe** : on crée un service, on partage son code à dix
+  caractères, les collègues le rejoignent et consultent le planning des autres
+  en lecture seule. Seuls les shifts traversent (matin, soir, nuit, repos,
+  vacances) : les événements perso et les types perso ne sortent jamais du
+  compte. L'admin peut faire tourner le code ou exclure un membre, chacun
+  peut quitter le service. Les règles d'accès vivent dans les politiques RLS,
+  pas dans le front (voir `supabase/migration_sharing.sql`)
 - Carte de charge du mois : jours travaillés, répartition matin/soir/nuit, repos
 - Grille lue comme une carte de couleurs : le shift colore le numéro du jour,
   les autres événements s'affichent en toutes lettres sous le numéro
@@ -50,7 +53,7 @@ Planify/
 │   ├── sheet.js     # Bottom-sheets, chips, batch mode
 │   ├── storage.js   # Persistance Supabase
 │   ├── subscribe.js # Lien d'abonnement calendrier (sync auto)
-│   ├── sharing.js   # Partage de planning entre comptes (invitation, lecture seule)
+│   ├── sharing.js   # Planning d'équipe (code, bascule, lecture seule)
 │   ├── toast.js     # Notifications toast
 │   └── utils.js     # Helpers DOM + ICS partagés
 ├── supabase/
