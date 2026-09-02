@@ -132,6 +132,14 @@ alter table public.teams                 enable row level security;
 alter table public.team_members          enable row level security;
 alter table public.share_redeem_throttle enable row level security;
 
+-- share_redeem_throttle : écrite uniquement par join_team (security definer).
+-- Une politique de lecture sur sa propre ligne, et rien d'autre : personne ne
+-- peut lire ni remettre à zéro le compteur d'un autre compte.
+drop policy if exists "read own throttle" on public.share_redeem_throttle;
+create policy "read own throttle"
+  on public.share_redeem_throttle for select to authenticated
+  using (user_id = auth.uid());
+
 -- profiles : le mien, plus ceux de mes coéquipiers.
 drop policy if exists "read own and teammate profiles" on public.profiles;
 create policy "read own and teammate profiles"
@@ -456,9 +464,17 @@ begin
     'create_team(text)', 'join_team(text)', 'leave_team(uuid)',
     'remove_team_member(uuid,uuid)', 'promote_team_member(uuid,uuid)',
     'rotate_team_code(uuid)', 'delete_team(uuid)', 'set_display_name(text)',
-    'is_teammate(uuid)', 'is_team_admin(uuid)', 'is_team_member(uuid)'
+    -- Une expression de politique RLS s'exécute avec les droits de l'appelant,
+    -- pas ceux du propriétaire de la politique : les deux helpers utilisés dans
+    -- les policies doivent rester exécutables par `authenticated`.
+    'is_teammate(uuid)', 'is_team_member(uuid)'
   ] loop
     execute format('revoke execute on function public.%s from anon, public', f);
     execute format('grant  execute on function public.%s to authenticated', f);
   end loop;
 end $$;
+
+-- is_team_admin n'est appelée que depuis les RPC (security definer, donc
+-- exécutées avec les droits du propriétaire). Aucun rôle client n'a besoin
+-- de pouvoir l'appeler à la main.
+revoke execute on function public.is_team_admin(uuid) from public, anon, authenticated;
