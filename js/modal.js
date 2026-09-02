@@ -7,10 +7,9 @@ let customTypes      = [];
 let selectedEmoji    = '';
 let selectedDuration = 'allday';
 let selectedHalfDay  = 'morning';
-// 'once' = événement ponctuel (appliqué au(x) jour(s), jamais dans la palette)
-// 'keep' = type réutilisable, ajouté à la liste "perso"
-let selectedScope    = 'once';
 // Jour(s) sur le(s)quel(s) l'événement sera posé, figé à l'ouverture du sheet.
+// Sans cible, l'événement ne peut être que réutilisable (sinon il serait
+// invisible : ni chip dans la palette, ni jour dans le planning).
 let pendingTarget    = null;
 
 // ── Emoji picker ─────────────────────────────────────────────────────────────
@@ -61,20 +60,11 @@ function selectHalfDay(half, target) {
   target.classList.add('active');
 }
 
-// ── Portée : ponctuel vs réutilisable ────────────────────────────────────────
-function selectScope(scope, target) {
-  selectedScope = scope;
-  document.querySelectorAll('.scope-selector .duration-option').forEach(o => o.classList.remove('active'));
-  target.classList.add('active');
-}
-
 function resetDurationUI() {
   document.querySelectorAll('.duration-selector .duration-option').forEach(o => o.classList.remove('active'));
   document.querySelector('[data-dur="allday"]').classList.add('active');
   document.querySelectorAll('.half-day-option').forEach(o => o.classList.remove('active'));
   document.querySelector('[data-half="morning"]').classList.add('active');
-  document.querySelectorAll('.scope-selector .duration-option').forEach(o => o.classList.remove('active'));
-  document.querySelector('[data-scope="once"]').classList.add('active');
   document.getElementById('timeRowContainer').classList.remove('visible');
   document.getElementById('halfDaySelector').style.display = 'none';
 }
@@ -100,19 +90,19 @@ function openCustomSheet() {
   closeSheet();
   selectedDuration = 'allday';
   selectedHalfDay  = 'morning';
-  // Sans jour cible, un événement ponctuel serait invisible : on force "keep".
-  selectedScope    = pendingTarget ? 'once' : 'keep';
+  // Décoché = ponctuel : le cas courant, et rien ne s'accumule dans la palette.
+  document.getElementById('customKeep').checked = false;
   document.getElementById('customName').value  = '';
   document.getElementById('customStart').value = '';
   document.getElementById('customEnd').value   = '';
   resetDurationUI();
 
-  // Le bloc "portée" n'a de sens que si on sait où poser l'événement.
-  const scopeGroup = document.getElementById('scopeGroup');
-  scopeGroup.style.display = pendingTarget ? 'block' : 'none';
-  if (pendingTarget) {
-    document.getElementById('scopeOnceDesc').textContent = describeTarget(pendingTarget);
-  }
+  // Sans cible, l'option n'a pas de sens : on la masque (keep forcé au save).
+  const scopeRow = document.getElementById('scopeGroup');
+  const subtitle = document.getElementById('customTargetLabel');
+  scopeRow.style.display = pendingTarget ? 'flex'  : 'none';
+  subtitle.style.display = pendingTarget ? 'block' : 'none';
+  subtitle.textContent   = pendingTarget ? describeTarget(pendingTarget) : '';
 
   // Wait for the previous sheet's close animation before re-opening overlay.
   setTimeout(() => {
@@ -179,7 +169,7 @@ async function saveCustomEvent() {
 
   const newType = buildCustomTypeFromForm(rawName);
   const target  = pendingTarget;
-  const keep    = selectedScope === 'keep' || !target;
+  const keep    = !target || document.getElementById('customKeep').checked;
 
   // Optimistic update. Un événement ponctuel va direct dans archivedTypes :
   // il reste affichable partout mais n'encombre pas la palette de chips.
