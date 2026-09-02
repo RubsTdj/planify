@@ -6,6 +6,9 @@ Export .ics pour Google Agenda / Apple Calendar.
 ## Stack
 - HTML / CSS / Vanilla JS
 - Single page, zero dépendance
+- Direction visuelle « natif » : police système, couleurs système iOS, un seul
+  accent (#007AFF), aucune webfont chargée. Les emoji sont réservés au contenu
+  (types perso choisis par l'utilisatrice), jamais à l'interface.
 - LocalStorage pour la persistance
 
 ## Fonctionnalités
@@ -20,6 +23,7 @@ Export .ics pour Google Agenda / Apple Calendar.
 - Retrait d'un type de la palette **sans toucher aux jours déjà planifiés**
   (le type est archivé, puis supprimé pour de bon quand plus aucun jour ne l'utilise)
 - Lien d'abonnement calendrier (Google Agenda, Apple Calendar) — sync auto
+- Résumé du mois affiché : matins, soirs, nuits, repos
 - Impression
 
 ## Structure
