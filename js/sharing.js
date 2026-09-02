@@ -1,68 +1,95 @@
-// ─── Partage de planning ──────────────────────────────────────────────────────
-// Invitation SORTANTE : le propriétaire génère un code, le transmet par son
-// propre canal, l'autre le saisit. Pas d'annuaire, donc aucune surface
-// d'énumération de comptes (voir supabase/migration_sharing.sql).
+// ─── Planning d'équipe ────────────────────────────────────────────────────────
+// Un service = une équipe. Un seul code, régénérable, valable 7 jours : à dix,
+// distribuer dix codes nominatifs serait une corvée. Le garde-fou du code
+// unique, c'est que la liste des membres est visible de tous et qu'un admin
+// peut exclure en un geste.
 //
-// Toute la sécurité vit dans la base : les politiques RLS décident qui lit
-// quoi et les RPC encadrent la création, la consommation et la révocation.
-// Ce fichier n'est qu'une interface — il ne peut rien débloquer de lui-même.
+// Le partage est limité aux SHIFTS et en LECTURE SEULE. Les événements perso
+// ne franchissent jamais la frontière de l'équipe, et c'est la politique RLS
+// qui le garantit (voir supabase/migration_sharing.sql). Ce fichier n'est
+// qu'une interface — il ne peut rien débloquer de lui-même.
 
-let myProfileName = '';     // mon nom d'affichage
-let sharesOut     = [];     // comptes à qui J'AI ouvert mon planning
-let sharesIn      = [];     // plannings AUXQUELS j'ai accès
-let pendingInvite = null;   // { code, scope } affiché une seule fois
-let viewingShare  = null;   // le partage consulté, null = mon propre planning
+let myProfileName = '';    // mon nom d'affichage
+let myTeams       = [];    // [{ id, name, role, members: [{ user_id, name, role }] }]
+let teammates     = [];    // coéquipiers, dédoublonnés : [{ user_id, name, teamName }]
+let pendingCode   = null;  // { code, teamName } affiché une seule fois
+let viewedMember  = null;  // le collègue consulté, null = mon propre planning
 
 // Un seul point de vérité pour « suis-je en lecture seule ». Toutes les
 // fonctions qui écrivent s'y réfèrent avant d'agir.
 function isReadOnly() {
-  return viewingShare !== null;
+  return viewedMember !== null;
 }
 
 function viewedUserId() {
-  return viewingShare ? viewingShare.owner_id : currentUserId();
+  return viewedMember ? viewedMember.user_id : currentUserId();
 }
 
 function initials(name) {
   return (name || '?').trim().charAt(0).toUpperCase();
 }
 
+function isAdminOf(team) {
+  return team.role === 'admin';
+}
+
 // ── Chargement ───────────────────────────────────────────────────────────────
-// Les deux sens du partage en une requête : RLS ne renvoie que les lignes où je
-// suis propriétaire ou lecteur.
+// RLS ne renvoie que les équipes dont je suis membre, et que les profils de mes
+// coéquipiers. Le client n'a rien à filtrer.
 async function loadSharing() {
   const uid = currentUserId();
   if (!uid) return;
 
-  // Le partage est une brique optionnelle : tant que la migration n'est pas
-  // passée, les tables n'existent pas. Rien ici ne doit pouvoir interrompre le
-  // démarrage de l'app — d'où le try/catch qui englobe tout.
-  let shares, prof;
+  // Brique optionnelle : tant que la migration n'est pas passée, ces tables
+  // n'existent pas. Rien ici ne doit interrompre le démarrage de l'app.
+  let members, teams, profiles;
   try {
-    const [r1, r2] = await Promise.all([
-      sb.from('shares').select('id, owner_id, viewer_id, scope, created_at').is('revoked_at', null),
+    const [r1, r2, r3] = await Promise.all([
+      sb.from('team_members').select('team_id, user_id, role'),
+      sb.from('teams').select('id, name'),
       sb.from('profiles').select('user_id, display_name'),
     ]);
-    if (r1.error || r2.error) throw (r1.error || r2.error);
-    shares = r1.data; prof = r2.data;
+    if (r1.error || r2.error || r3.error) throw (r1.error || r2.error || r3.error);
+    members = r1.data; teams = r2.data; profiles = r3.data;
   } catch (err) {
-    console.warn('loadSharing indisponible:', err);
-    sharesOut = []; sharesIn = []; viewingShare = null;
+    console.warn('Équipes indisponibles:', err);
+    myTeams = []; teammates = []; viewedMember = null;
     return;
   }
 
   const names = {};
-  for (const p of (prof || [])) names[p.user_id] = p.display_name;
+  for (const p of (profiles || [])) names[p.user_id] = p.display_name;
   myProfileName = names[uid] || '';
 
-  sharesOut = (shares || []).filter(s => s.owner_id  === uid)
-    .map(s => ({ ...s, name: names[s.viewer_id] || 'Compte Planify' }));
-  sharesIn  = (shares || []).filter(s => s.viewer_id === uid)
-    .map(s => ({ ...s, name: names[s.owner_id]  || 'Compte Planify' }));
+  myTeams = (teams || []).map(t => {
+    const rows = (members || []).filter(m => m.team_id === t.id);
+    const mine = rows.find(m => m.user_id === uid);
+    return {
+      id: t.id,
+      name: t.name,
+      role: mine ? mine.role : 'member',
+      members: rows.map(m => ({
+        user_id: m.user_id,
+        role: m.role,
+        name: m.user_id === uid ? (myProfileName || 'Moi') : (names[m.user_id] || 'Collègue'),
+      })).sort((a, b) => a.name.localeCompare(b.name)),
+    };
+  });
 
-  // Le partage consulté a pu être révoqué entre-temps.
-  if (viewingShare && !sharesIn.some(s => s.id === viewingShare.id)) {
-    viewingShare = null;
+  // Un collègue peut appartenir à deux équipes : on ne le liste qu'une fois.
+  const seen = new Set([uid]);
+  teammates = [];
+  for (const t of myTeams) {
+    for (const m of t.members) {
+      if (seen.has(m.user_id)) continue;
+      seen.add(m.user_id);
+      teammates.push({ user_id: m.user_id, name: m.name, teamName: t.name });
+    }
+  }
+
+  // Le collègue consulté a pu quitter l'équipe entre-temps.
+  if (viewedMember && !teammates.some(m => m.user_id === viewedMember.user_id)) {
+    viewedMember = null;
     await loadData();
   }
 }
@@ -82,28 +109,28 @@ async function ensureProfile() {
 }
 
 // ── Bascule entre plannings ──────────────────────────────────────────────────
-async function switchToPlanning(share) {
-  viewingShare = share;
+async function switchToPlanning(member) {
+  viewedMember = member;
   batchMode = false;
   batchSelected.clear();
   animatedTags = {};
   closeAllSheets();
   await loadData(viewedUserId());
   render();
-  showToast(share ? `Planning de ${share.name}` : 'Ton planning');
+  showToast(member ? `Planning de ${member.name}` : 'Ton planning');
 }
 
-// La sous-ligne du mois porte l'année et, dès qu'un partage existe, le nom du
+// La sous-ligne du mois porte l'année et, dès qu'une équipe existe, le nom du
 // planning affiché.
 function renderPlanningSwitch() {
   const btn = document.getElementById('planningSwitch');
   const lbl = document.getElementById('yearLabel');
   if (!btn || !lbl) return;
 
-  const switchable = sharesIn.length > 0;
+  const switchable = teammates.length > 0;
   btn.classList.toggle('switchable', switchable);
   lbl.textContent = switchable
-    ? `${currentYear} · ${viewingShare ? viewingShare.name : 'Mon planning'}`
+    ? `${currentYear} · ${viewedMember ? viewedMember.name : 'Mon planning'}`
     : String(currentYear);
 
   replaceChildren(btn, lbl);
@@ -111,16 +138,13 @@ function renderPlanningSwitch() {
 }
 
 function openPlanningPicker() {
-  if (sharesIn.length === 0) return;
+  if (teammates.length === 0) return;
   const sheet = document.getElementById('planningSheet');
 
   const row = (label, sub, active, onClick) => {
     const r = el('div', { class: 'share-row', onClick },
       el('div', { class: 'share-avatar', text: initials(label) }),
-      el('div', { class: 'share-row-tx' },
-        el('b', { text: label }),
-        el('span', { text: sub }),
-      ),
+      el('div', { class: 'share-row-tx' }, el('b', { text: label }), el('span', { text: sub })),
     );
     if (active) r.append(icon('check'));
     return r;
@@ -130,15 +154,14 @@ function openPlanningPicker() {
     el('div', { class: 'sheet-handle' }),
     el('div', { class: 'sheet-header' },
       el('h3', { text: 'Quel planning' }),
-      el('div', { class: 'sheet-date', text: 'Un seul à la fois, en lecture seule pour les autres.' }),
+      el('div', { class: 'sheet-date', text: 'Les shifts de tes collègues, en lecture seule.' }),
     ),
     el('div', { class: 'sheet-section' },
-      row('Mon planning', currentUser?.email || '', !viewingShare,
+      row('Mon planning', currentUser?.email || '', !viewedMember,
           () => { closeAllSheets(); switchToPlanning(null); }),
-      ...sharesIn.map(s => row(s.name,
-        s.scope === 'all' ? 'Tout son planning' : 'Ses shifts uniquement',
-        viewingShare?.id === s.id,
-        () => { closeAllSheets(); switchToPlanning(s); })),
+      ...teammates.map(m => row(m.name, m.teamName,
+        viewedMember?.user_id === m.user_id,
+        () => { closeAllSheets(); switchToPlanning(m); })),
     ),
   );
 
@@ -152,191 +175,201 @@ function closePlanningSheet() {
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
-async function createInvite(scope) {
-  const { data, error } = await sb.rpc('create_share_invite', { p_scope: scope });
-  if (error) {
-    console.error('createInvite:', error);
-    showToast(/pending|limit/.test(error.message || '')
-      ? 'Trop de codes en attente'
-      : 'Impossible de créer le code');
-    return;
-  }
-  pendingInvite = { code: data, scope };
-  buildShareSheet();
+function rpcErrorMessage(error, fallback) {
+  const m = error?.message || '';
+  if (/too many attempts/.test(m))   return 'Trop d\'essais, réessaie dans une heure';
+  if (/invalid or expired/.test(m))  return 'Code invalide ou expiré';
+  if (/team is full/.test(m))        return 'Cette équipe est complète';
+  if (/too many teams/.test(m))      return 'Tu as déjà trois équipes';
+  if (/promote another admin/.test(m)) return 'Nomme un autre admin avant de partir';
+  if (/not a team admin/.test(m))    return 'Réservé aux admins';
+  return fallback;
 }
 
-async function redeemInvite(rawCode) {
+async function createTeam(name) {
+  if (!name.trim()) { showToast('Donne un nom au service'); return; }
+  const { data, error } = await sb.rpc('create_team', { p_name: name });
+  if (error) { showToast(rpcErrorMessage(error, 'Création impossible')); return; }
+  const row = Array.isArray(data) ? data[0] : data;
+  await loadSharing();
+  pendingCode = { code: row?.o_code, teamName: name };
+  buildShareSheet();
+  renderPlanningSwitch();
+  showToast('Service créé');
+}
+
+async function joinTeam(rawCode) {
   const code = (rawCode || '').trim();
   if (code.length < 6) { showToast('Code incomplet'); return; }
-
-  const { data, error } = await sb.rpc('redeem_share_invite', { p_code: code });
-  if (error) {
-    console.error('redeemInvite:', error);
-    const m = error.message || '';
-    showToast(/too many attempts/.test(m) ? 'Trop d\'essais, réessaie dans une heure'
-            : /yourself/.test(m)          ? 'C\'est ton propre code'
-            : 'Code invalide ou expiré');
-    return;
-  }
-
+  const { data, error } = await sb.rpc('join_team', { p_code: code });
+  if (error) { showToast(rpcErrorMessage(error, 'Impossible de rejoindre')); return; }
   const row = Array.isArray(data) ? data[0] : data;
   await loadSharing();
   buildShareSheet();
   renderPlanningSwitch();
-  showToast(`Tu suis le planning de ${row?.o_display_name || 'ce compte'}`);
+  showToast(`Bienvenue dans ${row?.o_team_name || 'l\'équipe'}`);
 }
 
-async function revokeShare(shareId, name) {
-  const { error } = await sb.rpc('revoke_share', { p_share_id: shareId });
-  if (error) { console.error('revokeShare:', error); showToast('Révocation impossible'); return; }
+// Le code n'est stocké que haché : on ne peut pas le « réafficher », seulement
+// en générer un nouveau, ce qui invalide le précédent.
+async function generateTeamCode(team) {
+  const { data, error } = await sb.rpc('rotate_team_code', { p_team: team.id });
+  if (error) { showToast(rpcErrorMessage(error, 'Génération impossible')); return; }
+  pendingCode = { code: data, teamName: team.name };
+  buildShareSheet();
+}
+
+async function leaveTeam(team) {
+  const { error } = await sb.rpc('leave_team', { p_team: team.id });
+  if (error) { showToast(rpcErrorMessage(error, 'Impossible de quitter')); return; }
   await loadSharing();
   buildShareSheet();
   renderPlanningSwitch();
   render();
-  showToast(`Accès retiré · ${name}`);
+  showToast(`Tu as quitté ${team.name}`);
+}
+
+async function removeMember(team, member) {
+  const { error } = await sb.rpc('remove_team_member', { p_team: team.id, p_user: member.user_id });
+  if (error) { showToast(rpcErrorMessage(error, 'Retrait impossible')); return; }
+  await loadSharing();
+  buildShareSheet();
+  renderPlanningSwitch();
+  render();
+  showToast(`${member.name} retiré du service`);
 }
 
 async function saveDisplayName(name) {
   const { data, error } = await sb.rpc('set_display_name', { p_name: name });
-  if (error) { console.error('saveDisplayName:', error); showToast('Nom refusé'); return; }
+  if (error) { showToast('Nom refusé'); return; }
   myProfileName = data;
+  await loadSharing();
   showToast('Nom enregistré');
 }
 
-// ── Feuille « Partage de planning » ──────────────────────────────────────────
-function shareRow(name, sub, actionLabel, onAction) {
-  const btn = el('button', { class: 'share-row-act', text: actionLabel, onClick: onAction });
-  return el('div', { class: 'share-row' },
-    el('div', { class: 'share-avatar', text: initials(name) }),
-    el('div', { class: 'share-row-tx' }, el('b', { text: name }), el('span', { text: sub })),
-    btn,
+// ── Feuille « Mon service » ──────────────────────────────────────────────────
+function memberRow(team, member) {
+  const isMe = member.user_id === currentUserId();
+  const sub  = member.role === 'admin' ? 'Admin' : 'Membre';
+
+  const row = el('div', { class: 'share-row' },
+    el('div', { class: 'share-avatar', text: initials(member.name) }),
+    el('div', { class: 'share-row-tx' },
+      el('b', { text: isMe ? `${member.name} (toi)` : member.name }),
+      el('span', { text: sub }),
+    ),
   );
+  // Le contrepoids du code unique : un admin sort quelqu'un en un geste.
+  if (isAdminOf(team) && !isMe) {
+    row.append(el('button', { class: 'share-row-act', text: 'Retirer',
+      onClick: () => removeMember(team, member) }));
+  }
+  return row;
+}
+
+function teamBlock(team) {
+  const children = [
+    el('div', { class: 'share-title', text: `${team.name} · ${team.members.length} membre(s)` }),
+    ...team.members.map(m => memberRow(team, m)),
+    el('div', { style: 'height:12px' }),
+  ];
+
+  if (isAdminOf(team)) {
+    children.push(el('button', { class: 'btn btn-ghost', onClick: () => generateTeamCode(team) },
+      icon('refresh'), 'Générer un code d\'invitation'));
+    children.push(el('div', { class: 'share-hint', text:
+      'Le nouveau code remplace le précédent. Valable 7 jours, à partager avec le service.' }));
+    children.push(el('div', { style: 'height:10px' }));
+  }
+
+  children.push(el('button', { class: 'share-row-act', text: `Quitter ${team.name}`,
+    style: 'padding:8px 0', onClick: () => leaveTeam(team) }));
+
+  return el('div', { class: 'share-block' }, ...children);
 }
 
 function buildShareSheet() {
-  const sheet = document.getElementById('shareSheet');
+  const sheet  = document.getElementById('shareSheet');
+  const blocks = [];
 
-  // 1. Mon nom, tel que les autres le verront.
-  const nameInput = el('input', {
-    class: 'form-input',
-    attrs: { type: 'text', maxlength: '40', placeholder: 'Ton prénom' },
-  });
+  // 1. Mon nom, tel que le service le verra.
+  const nameInput = el('input', { class: 'form-input',
+    attrs: { type: 'text', maxlength: '40', placeholder: 'Ton prénom' } });
   nameInput.value = myProfileName;
-  const nameBtn = el('button', { class: 'btn btn-ghost', text: 'Enregistrer',
-    onClick: () => saveDisplayName(nameInput.value) });
-
-  const blockName = el('div', { class: 'share-block' },
-    el('div', { class: 'share-title', text: 'Ton nom, tel que les autres le verront' }),
+  blocks.push(el('div', { class: 'share-block' },
+    el('div', { class: 'share-title', text: 'Ton nom, tel que le service le verra' }),
     nameInput,
     el('div', { style: 'height:9px' }),
-    nameBtn,
-  );
+    el('button', { class: 'btn btn-ghost', text: 'Enregistrer',
+      onClick: () => saveDisplayName(nameInput.value) }),
+  ));
 
-  // 2. Créer un code. Le périmètre est la décision de confidentialité : les
-  //    événements perso ne traversent que si on choisit « tout ».
-  let blockInvite;
-  if (pendingInvite) {
+  // 2. Le code qui vient d'être généré, affiché une seule fois.
+  if (pendingCode) {
     const copyBtn = el('button', { class: 'btn btn-primary' }, icon('copy'), 'Copier le code');
     copyBtn.addEventListener('click', async () => {
-      const ok = await copyToClipboard(pendingInvite.code);
+      const ok = await copyToClipboard(pendingCode.code);
       showToast(ok ? 'Code copié' : 'Copie échouée');
     });
-    blockInvite = el('div', { class: 'share-block' },
-      el('div', { class: 'share-title', text: 'Ton code, à transmettre de vive voix ou par SMS' }),
-      el('div', { class: 'share-code', text: pendingInvite.code }),
+    blocks.push(el('div', { class: 'share-block' },
+      el('div', { class: 'share-title', text: `Code d'invitation · ${pendingCode.teamName}` }),
+      el('div', { class: 'share-code', text: pendingCode.code }),
       el('div', { style: 'height:10px' }),
       copyBtn,
       el('div', { class: 'share-hint', text:
-        `Valable 72 heures, une seule utilisation, ${pendingInvite.scope === 'all'
-          ? 'donne accès à tout ton planning.'
-          : 'ne donne accès qu\'à tes shifts.'} Il ne sera plus affiché ensuite.` }),
+        'Valable 7 jours. Il donne accès aux shifts du service, jamais aux événements perso. Il ne sera plus affiché ensuite.' }),
       el('div', { style: 'height:10px' }),
       el('button', { class: 'btn btn-ghost', text: 'Terminé',
-        onClick: () => { pendingInvite = null; buildShareSheet(); } }),
-    );
-  } else {
-    blockInvite = el('div', { class: 'share-block' },
-      el('div', { class: 'share-title', text: 'Partager mon planning' }),
-      el('div', { class: 'duration-selector' },
-        el('div', { class: 'duration-option active', dataset: { scope: 'shifts' },
-                    onClick: e => selectShareScope(e.currentTarget) },
-          el('span', { class: 'dur-emoji' }, icon('matin')),
-          el('span', { class: 'dur-label', text: 'Mes shifts' }),
-          el('span', { class: 'dur-desc',  text: 'Sans le perso' }),
-        ),
-        el('div', { class: 'duration-option', dataset: { scope: 'all' },
-                    onClick: e => selectShareScope(e.currentTarget) },
-          el('span', { class: 'dur-emoji' }, icon('eye')),
-          el('span', { class: 'dur-label', text: 'Tout' }),
-          el('span', { class: 'dur-desc',  text: 'Perso compris' }),
-        ),
-      ),
-      el('button', { class: 'btn btn-primary', text: 'Créer un code',
-        onClick: () => createInvite(selectedShareScope) }),
-    );
+        onClick: () => { pendingCode = null; buildShareSheet(); } }),
+    ));
   }
 
-  // 3. Qui voit mon planning.
-  const blockOut = el('div', { class: 'share-block' },
-    el('div', { class: 'share-title', text: 'Ont accès à mon planning' }),
-    ...(sharesOut.length
-      ? sharesOut.map(s => shareRow(s.name,
-          s.scope === 'all' ? 'Tout mon planning' : 'Mes shifts uniquement',
-          'Révoquer', () => revokeShare(s.id, s.name)))
-      : [el('div', { class: 'share-empty', text: 'Personne pour le moment.' })]),
-  );
+  // 3. Mes équipes.
+  myTeams.forEach(t => blocks.push(teamBlock(t)));
 
-  // 4. Saisir un code reçu.
-  const codeInput = el('input', {
-    class: 'form-input',
+  // 4. Rejoindre, ou créer si je n'ai pas encore de service.
+  const codeInput = el('input', { class: 'form-input',
     attrs: { type: 'text', placeholder: 'Ex : A1B2C3D4E5', autocapitalize: 'characters',
-             autocomplete: 'off', spellcheck: 'false' },
-  });
-  codeInput.addEventListener('keydown', e => { if (e.key === 'Enter') redeemInvite(codeInput.value); });
-
-  const blockJoin = el('div', { class: 'share-block' },
-    el('div', { class: 'share-title', text: 'J\'ai reçu un code' }),
+             autocomplete: 'off', spellcheck: 'false' } });
+  codeInput.addEventListener('keydown', e => { if (e.key === 'Enter') joinTeam(codeInput.value); });
+  blocks.push(el('div', { class: 'share-block' },
+    el('div', { class: 'share-title', text: 'Rejoindre un service' }),
     codeInput,
     el('div', { style: 'height:9px' }),
     el('button', { class: 'btn btn-ghost', text: 'Rejoindre',
-      onClick: () => redeemInvite(codeInput.value) }),
-  );
+      onClick: () => joinTeam(codeInput.value) }),
+  ));
 
-  // 5. Les plannings que je suis.
-  const blockIn = el('div', { class: 'share-block' },
-    el('div', { class: 'share-title', text: 'Plannings que je suis' }),
-    ...(sharesIn.length
-      ? sharesIn.map(s => shareRow(s.name,
-          s.scope === 'all' ? 'Tout son planning' : 'Ses shifts uniquement',
-          'Se désabonner', () => revokeShare(s.id, s.name)))
-      : [el('div', { class: 'share-empty', text: 'Aucun pour le moment.' })]),
-  );
+  if (myTeams.length === 0) {
+    const teamInput = el('input', { class: 'form-input',
+      attrs: { type: 'text', maxlength: '60', placeholder: 'Ex : Cardio 3e étage' } });
+    blocks.push(el('div', { class: 'share-block' },
+      el('div', { class: 'share-title', text: 'Ou créer le tien' }),
+      teamInput,
+      el('div', { style: 'height:9px' }),
+      el('button', { class: 'btn btn-primary', text: 'Créer le service',
+        onClick: () => createTeam(teamInput.value) }),
+    ));
+  }
 
   replaceChildren(sheet,
     el('div', { class: 'sheet-handle' }),
     el('div', { class: 'sheet-header' },
-      el('h3', { text: 'Partage de planning' }),
-      el('div', { class: 'sheet-date', text: 'En lecture seule, révocable à tout moment des deux côtés.' }),
+      el('h3', { text: 'Mon service' }),
+      el('div', { class: 'sheet-date', text:
+        'Chacun voit les shifts des autres, en lecture seule. Les événements perso restent privés.' }),
     ),
     el('div', { class: 'modal-content' },
-      blockName, blockInvite, blockOut, blockJoin, blockIn,
+      ...blocks,
       el('div', { style: 'height:6px' }),
       el('button', { class: 'btn btn-ghost', text: 'Fermer', onClick: closeShareSheet }),
     ),
   );
 }
 
-let selectedShareScope = 'shifts';
-function selectShareScope(target) {
-  selectedShareScope = target.dataset.scope;
-  target.parentElement.querySelectorAll('.duration-option')
-    .forEach(o => o.classList.toggle('active', o === target));
-}
-
 async function openShareSheet() {
   closeAllSheets();
-  pendingInvite = null;
-  selectedShareScope = 'shifts';
+  pendingCode = null;
   await ensureProfile();
   await loadSharing();
   buildShareSheet();
@@ -349,5 +382,5 @@ async function openShareSheet() {
 function closeShareSheet() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('shareSheet').classList.remove('visible');
-  pendingInvite = null;
+  pendingCode = null;
 }

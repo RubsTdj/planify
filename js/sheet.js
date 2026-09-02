@@ -90,7 +90,7 @@ function openReadOnlySheet(dateStr) {
   const dayEvents = events[dateStr] || [];
 
   document.getElementById('sheetTitle').textContent = `${DAYS_FR[d.getDay()]} ${d.getDate()} ${MONTHS_FR[d.getMonth()]}`;
-  document.getElementById('sheetDate').textContent  = viewingShare ? `Planning de ${viewingShare.name}` : '';
+  document.getElementById('sheetDate').textContent  = viewedMember ? `Planning de ${viewedMember.name}` : '';
 
   const section = document.getElementById('sheetCurrent');
   const divider = document.getElementById('sheetDivider');
@@ -485,7 +485,7 @@ function updateBatchUI() {
     replaceChildren(bottomBar,
       el('div', { class: 'readonly-bar' },
         icon('eye'),
-        el('span', {}, 'Lecture seule · ', el('b', { text: viewingShare.name })),
+        el('span', {}, 'Lecture seule · ', el('b', { text: viewedMember.name })),
       ),
       el('button', { class: 'batch-btn', onClick: () => switchToPlanning(null) }, 'Revenir'),
     );
