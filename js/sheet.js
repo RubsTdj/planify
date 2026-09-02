@@ -110,10 +110,17 @@ function buildCurrentEventItem(dateStr, evtId) {
   const type = getEventType(evtId);
   if (!type) return null;
 
-  const removeBtn = el('button', { class: 'current-event-remove', attrs: { 'aria-label': 'Retirer' } }, '✕');
-  const item = el('div', { class: `current-event-item bg-${type.cssClass || 'custom'}` },
+  const removeBtn = el('button', { class: 'current-event-remove', attrs: { 'aria-label': 'Retirer' } },
+    icon('close'));
+
+  // Les shifts intégrés ont une icône dessinée ; les types perso gardent leur
+  // emoji, c'est l'utilisatrice qui l'a choisi.
+  const badge = el('div', { class: `cev-icon ${type.cssClass || 'custom'}` });
+  badge.append(type.icon ? icon(type.icon) : document.createTextNode(type.emoji));
+
+  const item = el('div', { class: 'current-event-item' },
     el('div', { class: 'current-event-left' },
-      el('span', { class: 'cev-emoji', text: type.emoji }),
+      badge,
       el('div', {},
         el('div', { class: 'cev-label', text: type.label }),
         el('div', { class: 'cev-time',  text: timeLabelFor(type) }),
@@ -142,8 +149,8 @@ function chipForBuiltin(type, isAlreadyAdded, isBatch) {
   const chip = el('div', {
     class: `event-chip ${type.cssClass}${(!isBatch && isAlreadyAdded) ? ' already-added' : ''}`,
   },
-    el('span', { class: 'chip-emoji', text: type.emoji }),
-    ' ' + type.label, // safe: passed as text node via el()
+    type.icon ? icon(type.icon) : el('span', { class: 'chip-emoji', text: type.emoji }),
+    type.label, // safe: passed as text node via el()
   );
   if (!isAlreadyAdded || isBatch) {
     chip.addEventListener('click', () => addEvent(type.id, isBatch));
@@ -157,10 +164,10 @@ function chipForCustom(type, isAlreadyAdded, isBatch, dateStr) {
     + ((!isBatch && isAlreadyAdded) ? ' already-added' : '')
     + (manageCustomMode ? ' manage-mode' : '');
 
-  const deleteBtn = el('span', { class: 'chip-delete', text: '✕' });
+  const deleteBtn = el('span', { class: 'chip-delete' }, icon('close'));
   const chip = el('div', { class: cls },
     el('span', { class: 'chip-emoji', text: type.emoji }),
-    ' ' + type.label,
+    type.label,
     deleteBtn,
   );
 
@@ -204,7 +211,7 @@ function buildChips(dateStr, isBatch) {
     .filter(Boolean);
 
   const addNewChip = el('div', { class: 'event-chip custom add-new', onClick: openCustomSheet },
-    '+ Nouveau',
+    icon('plus'), 'Nouveau',
   );
   replaceChildren(customContainer, ...customChips, addNewChip);
 
@@ -213,7 +220,9 @@ function buildChips(dateStr, isBatch) {
   const hasPerso  = getAllPersoTypes().length > 0;
   manageBtn.style.display = hasPerso ? 'inline-flex' : 'none';
   manageBtn.classList.toggle('active', manageCustomMode);
-  manageBtn.textContent = manageCustomMode ? 'Terminé' : 'Gérer mes types';
+  replaceChildren(manageBtn,
+    icon(manageCustomMode ? 'check' : 'trash'),
+    document.createTextNode(manageCustomMode ? 'Terminé' : 'Gérer mes types'));
 }
 
 function createChip(type, isAlreadyAdded, isBatch) {
@@ -235,17 +244,17 @@ function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
 
   const yes = el('button', {
     class: 'confirm-yes',
-    style: 'padding:4px 11px;border-radius:8px;border:none;background:#FF3B30;color:white;font-weight:600;font-size:13px;cursor:pointer;margin-left:6px;',
+    style: 'padding:5px 12px;border-radius:9px;border:none;background:#C0392F;color:white;font-weight:600;font-size:13px;cursor:pointer;margin-left:6px;font-family:inherit;',
     text: 'Oui',
   });
   const no = el('button', {
     class: 'confirm-no',
-    style: 'padding:4px 11px;border-radius:8px;border:none;background:#E5E5EA;color:#000;font-weight:500;font-size:13px;cursor:pointer;margin-left:4px;',
+    style: 'padding:5px 12px;border-radius:9px;border:none;background:#E4E5E9;color:#16171C;font-weight:500;font-size:13px;cursor:pointer;margin-left:4px;font-family:inherit;',
     text: 'Non',
   });
   // "Retirer" et pas "Supprimer" : les jours déjà planifiés ne bougent pas.
   const prompt = el('span',
-    { style: 'font-size:13px;font-weight:600;color:#FF3B30;flex:1;', text: 'Retirer ?' });
+    { style: 'font-size:13px;font-weight:600;color:#C0392F;flex:1;', text: 'Retirer ?' });
 
   replaceChildren(chip, prompt, yes, no);
 
@@ -294,8 +303,8 @@ async function deletePersoType(typeId, typeName) {
   if (usedOn > 0 && def) archivedTypes.push(def);
 
   showToast(usedOn > 0
-    ? `🗑️ "${typeName}" retiré · ${usedOn} jour(s) conservé(s)`
-    : `🗑️ "${typeName}" supprimé`);
+    ? `« ${typeName} » retiré · ${usedOn} jour(s) conservé(s)`
+    : `« ${typeName} » supprimé`);
   render();
 
   const isBatch = batchMode && batchSelected.size > 0;
@@ -390,7 +399,7 @@ async function purgeArchivedTypeIfUnused(typeId) {
 function toggleBatchMode() {
   batchMode = !batchMode;
   batchSelected.clear();
-  if (batchMode) showToast('⚡ Tapez les jours puis "Appliquer"');
+  if (batchMode) showToast('Tapez les jours puis « Appliquer »');
   render();
 }
 
@@ -411,14 +420,13 @@ function updateBatchUI() {
     replaceChildren(bottomBar,
       el('button', { class: 'batch-btn active', text: 'Annuler', onClick: toggleBatchMode }),
       el('button', { class: 'batch-btn', text: 'Appliquer',
-                     style: 'opacity:0.4;cursor:default;',
+                     style: 'flex:1;opacity:0.35;cursor:default;',
                      attrs: { disabled: 'disabled' } }),
     );
   } else {
     counter.classList.remove('visible');
-    replaceChildren(bottomBar,
-      el('button', { class: 'batch-btn today-btn',       text: 'Aujourd\'hui',       onClick: goToday }),
-      el('button', { class: 'batch-btn multiselect-btn', text: 'Sélection multiple', onClick: toggleBatchMode }),
-    );
+    const multi = el('button', { class: 'batch-btn multiselect-btn', onClick: toggleBatchMode },
+      icon('select'), 'Sélection multiple');
+    replaceChildren(bottomBar, multi);
   }
 }

@@ -14,7 +14,7 @@ function reportError(where, error, ignoreDuplicate = false) {
   if (!error) return;
   if (ignoreDuplicate && error.code === '23505') return;
   console.error(where + ':', error);
-  showToast('⚠️ Erreur de sauvegarde');
+  showToast('Erreur de sauvegarde');
 }
 
 // ── Load: fetch all events + custom types for the current user ───────────────
@@ -55,7 +55,7 @@ async function loadData() {
     }
   } catch (err) {
     console.error('Supabase loadData error:', err);
-    showToast('⚠️ Erreur de connexion à la base de données');
+    showToast('Connexion à la base impossible');
   }
 }
 

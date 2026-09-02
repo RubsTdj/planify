@@ -178,7 +178,7 @@ function buildSignedOutMenu(menu) {
 
   const subscribeBtn = el('button', {
     class: 'user-menu-item',
-    text:  '📅 Synchroniser avec mon agenda',
+    text:  'Synchroniser avec mon agenda',
     onClick: openSubscribeSheet,
   });
   const signOutBtn = el('button', {

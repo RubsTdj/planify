@@ -27,7 +27,7 @@ async function getOrCreateCalendarToken() {
 
   if (readErr) {
     console.error('getOrCreateCalendarToken read:', readErr);
-    showToast('⚠️ Erreur de lecture du token');
+    showToast('Lecture du lien impossible');
     return null;
   }
   if (row?.token) return row.token;
@@ -36,7 +36,7 @@ async function getOrCreateCalendarToken() {
   const { data: tok, error: rpcErr } = await sb.rpc('rotate_calendar_token');
   if (rpcErr) {
     console.error('getOrCreateCalendarToken rpc:', rpcErr);
-    showToast('⚠️ Impossible de générer le lien');
+    showToast('Impossible de générer le lien');
     return null;
   }
   return tok;
@@ -47,7 +47,7 @@ async function rotateCalendarToken() {
   const { data: tok, error } = await sb.rpc('rotate_calendar_token');
   if (error) {
     console.error('rotateCalendarToken:', error);
-    showToast('⚠️ Échec de la rotation');
+    showToast('Échec de la régénération');
     return null;
   }
   showToast('🔄 Nouveau lien généré');
@@ -104,7 +104,7 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
   const handle = el('div', { class: 'sheet-handle' });
 
   const header = el('div', { class: 'sheet-header' },
-    el('h3', { text: '📅 Synchroniser avec mon agenda' }),
+    el('h3', { text: 'Synchroniser avec mon agenda' }),
     el('div', { class: 'sheet-date',
       text: 'Modif dans Planify → ton agenda se met à jour automatiquement (toutes les quelques heures).' }),
   );
@@ -120,7 +120,7 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
   const copyBtn = el('button', { class: 'btn btn-primary', text: '📋 Copier le lien' });
   copyBtn.addEventListener('click', async () => {
     const ok = await copyToClipboard(httpsUrl);
-    showToast(ok ? '✅ Lien copié !' : '⚠️ Copie échouée');
+    showToast(ok ? 'Lien copié' : 'Copie échouée');
   });
 
   // Apple Calendar : webcal:// déclenche directement la fiche d'abonnement.

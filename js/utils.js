@@ -29,6 +29,20 @@ function el(tag, opts = {}, ...children) {
   return node;
 }
 
+// Build an <svg><use href="#ic-…"></svg> node from the sprite in index.html.
+// Icons inherit the current text colour; sizing is done in CSS.
+function icon(name, cls) {
+  const NS  = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  if (cls) svg.setAttribute('class', cls);
+  const use = document.createElementNS(NS, 'use');
+  use.setAttribute('href', '#ic-' + name);
+  svg.append(use);
+  return svg;
+}
+
 // Replace a container's children with the given nodes. Avoids `innerHTML =`.
 function replaceChildren(container, ...nodes) {
   container.replaceChildren(...nodes.filter(Boolean));

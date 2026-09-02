@@ -7,28 +7,20 @@ let currentMonth, currentYear;
 let events        = {};
 let animatedTags  = {};
 
-// Maximum number of full tags rendered per day cell in screen view.
-// On print we render ALL events as compact tags (see renderCalendar `forPrint`).
+// Intitulés secondaires affichés par jour à l'écran (au-delà : « +N »).
+// À l'impression on les rend tous.
 const MAX_TAGS_SCREEN = 2;
-
-// Dot indicator colours used when a day overflows past MAX_TAGS_SCREEN.
-const DOT_COLORS = {
-  matin:    '#FF9500',
-  soir:     '#FF375F',
-  nuit:     '#5856D6',
-  repos:    '#34C759',
-  vacances: '#30B0C7',
-  custom:   '#AEAEB2',
-};
 
 // Types comptés dans le résumé du mois, dans cet ordre. Vacances n'apparaît
 // que si le mois affiché en contient : sinon la ligne resterait à cinq
 // colonnes pour rien sur un écran de 375px.
 const SUMMARY_TYPES = ['matin', 'soir', 'nuit', 'repos', 'vacances'];
+const WORK_TYPES    = ['matin', 'soir', 'nuit'];
 
-function getDotColor(typeId) {
-  return DOT_COLORS[typeId] || DOT_COLORS.custom;
-}
+// Le type qui colore le numéro du jour : le premier trouvé dans cet ordre.
+// Tout le reste (autre shift, événement perso) descend en intitulé sous le
+// numéro, en toutes lettres — un emoji seul obligerait à deviner ou à cliquer.
+const PRIMARY_ORDER = ['matin', 'soir', 'nuit', 'vacances', 'repos'];
 
 // Build a `YYYY-MM-DD` key — used everywhere as the canonical date format.
 function formatDate(y, m, d) {
@@ -43,11 +35,12 @@ function render() {
   if (yearEl)  yearEl.textContent  = currentYear;
 
   renderMonthSummary();
+  renderCalendarLegend();
   renderCalendar();
   updateBatchUI();
 }
 
-// ── Résumé du mois ───────────────────────────────────────────────────────────
+// ── Carte de charge du mois ──────────────────────────────────────────────────
 // Combien de matins, soirs, nuits et repos sur le mois affiché. Rien de
 // nouveau en base : c'est un décompte de `events` sur le préfixe du mois.
 function countByTypeForMonth() {
@@ -60,22 +53,79 @@ function countByTypeForMonth() {
   return counts;
 }
 
+// Une barre segmentée vaut mieux que quatre nombres alignés : on voit du même
+// coup le volume travaillé ET sa répartition.
+function buildLoadCard(counts) {
+  const worked = WORK_TYPES.reduce((n, id) => n + (counts[id] || 0), 0);
+
+  const top = el('div', { class: 'ms-top' },
+    el('div', { class: 'ms-total' },
+      el('b', { text: worked }),
+      el('span', { text: worked > 1 ? 'jours travaillés' : 'jour travaillé' }),
+    ),
+    el('div', { class: 'ms-rest' },
+      el('b', { text: counts.repos || 0 }),
+      el('span', { text: 'repos' }),
+    ),
+  );
+
+  const bar = el('div', { class: 'ms-bar' },
+    ...WORK_TYPES.filter(id => counts[id]).map(id =>
+      el('i', { class: id, style: `flex:${counts[id]}` })),
+  );
+
+  const legend = el('div', { class: 'ms-legend' },
+    ...WORK_TYPES.map(id => {
+      const type = getEventType(id);
+      const n    = counts[id] || 0;
+      return el('div', { class: 'ms-leg' },
+        el('i', { class: id }),
+        el('b', { text: n }),
+        el('span', { text: (type ? type.label : id).toLowerCase() + (n > 1 ? 's' : '') }),
+      );
+    }),
+    counts.vacances ? el('div', { class: 'ms-leg' },
+      el('i', { class: 'vacances' }),
+      el('b', { text: counts.vacances }),
+      el('span', { text: 'vacances' }),
+    ) : null,
+  );
+
+  return [top, bar, legend];
+}
+
+// Mois vide : proposer l'action plutôt qu'aligner des zéros.
+function buildEmptyLoadCard() {
+  return [el('div', { class: 'ms-empty' },
+    el('div', { class: 'ms-empty-ic' }, icon('cal')),
+    el('div', { class: 'ms-empty-tx' },
+      el('b', { text: 'Rien de planifié' }),
+      el('span', { text: 'Sélectionne plusieurs jours pour poser un shift d\'un coup.' }),
+    ),
+  )];
+}
+
 function renderMonthSummary() {
   const box = document.getElementById('monthSummary');
   if (!box) return;
-
   const counts = countByTypeForMonth();
-  const items = SUMMARY_TYPES
-    .filter(id => id !== 'vacances' || counts.vacances)
+  const any    = SUMMARY_TYPES.some(id => counts[id]);
+  replaceChildren(box, ...(any ? buildLoadCard(counts) : buildEmptyLoadCard()));
+}
+
+// Légende des couleurs, sous la grille.
+function renderCalendarLegend() {
+  const box = document.getElementById('calLegend');
+  if (!box) return;
+  replaceChildren(box, ...SUMMARY_TYPES
+    .filter(id => id !== 'vacances' || countByTypeForMonth().vacances)
     .map(id => {
       const type = getEventType(id);
-      const n    = counts[id] || 0;
-      return el('div', { class: 'ms-item' },
-        el('span', { class: `ms-count ${id}${n === 0 ? ' zero' : ''}`, text: n }),
-        el('span', { class: 'ms-label', text: type ? type.label : id }),
+      return el('div', { class: 'cal-leg' },
+        el('i', { class: id }),
+        el('span', { text: type ? type.label : id }),
       );
-    });
-  replaceChildren(box, ...items);
+    }));
 }
 
 // ── Helpers used by the cell renderer ────────────────────────────────────────
@@ -93,28 +143,24 @@ function isSameDay(a, b) {
       && a.getDate()     === b.getDate();
 }
 
-// Build a single event tag node. Safe against XSS — label/emoji go through
-// textContent via el(), never innerHTML.
-function buildEventTag(type, dateStr, index) {
-  const animKey  = dateStr + '|' + type.id;
-  const animate  = !animatedTags[animKey];
+// Un intitulé par événement secondaire. Safe against XSS — label/emoji go
+// through textContent via el(), never innerHTML.
+function buildEventTag(type, dateStr) {
+  const animKey = dateStr + '|' + type.id;
+  const animate = !animatedTags[animKey];
   if (animate) animatedTags[animKey] = true;
 
-  const classes = `event-tag ${type.tagClass || 'tag-custom'}${animate ? ' animate-in' : ''}`;
   return el('div', {
-    class: classes,
-    style: animate ? `animation-delay:${index * 0.08}s` : '',
-  },
-    el('span', { class: 'tag-emoji', text: type.emoji }),
-    el('span', { class: 'tag-label', text: type.label }),
-  );
+    class: `event-tag ${type.tagClass || 'tag-custom'}${animate ? ' animate-in' : ''}`,
+    text: type.label,
+    attrs: { title: type.label },
+  });
 }
 
-function buildOverflowDots(dayEvents, sliceFrom) {
-  const dots = dayEvents.slice(sliceFrom).map(evtId =>
-    el('span', { class: 'day-dot', style: `background:${getDotColor(evtId)}` })
-  );
-  return el('div', { class: 'day-dots' }, ...dots);
+// Le shift qui colore le numéro, et le reste dans l'ordre d'ajout.
+function splitDayEvents(dayEvents) {
+  const primary = PRIMARY_ORDER.find(id => dayEvents.includes(id)) || null;
+  return { primary, rest: dayEvents.filter(id => id !== primary) };
 }
 
 // Build one day cell. `forPrint=true` skips the overflow-dots cap so every
@@ -135,27 +181,30 @@ function buildDayCell(year, month, d, today, forPrint) {
   if (isPast)     cls += ' past';
   if (isSelected) cls += ' selected';
 
-  const eventsContainer = el('div', { class: 'day-events' });
+  const { primary, rest } = splitDayEvents(dayEvents);
 
-  // On print: render every event as a compact tag (no 2-tag cap, no dots).
-  const tagLimit = forPrint ? dayEvents.length : MAX_TAGS_SCREEN;
-  dayEvents.slice(0, tagLimit).forEach((evtId, i) => {
+  const numberCls = 'day-number'
+    + (primary ? ' ' + primary : '')
+    + (isToday && !primary ? ' plain' : '');
+
+  const eventsContainer = el('div', { class: 'day-events' });
+  const shown = forPrint ? rest : rest.slice(0, MAX_TAGS_SCREEN);
+  shown.forEach(evtId => {
     const type = getEventType(evtId);
-    if (type) eventsContainer.append(buildEventTag(type, dateStr, i));
+    if (type) eventsContainer.append(buildEventTag(type, dateStr));
   });
-  if (!forPrint && dayEvents.length > MAX_TAGS_SCREEN) {
-    eventsContainer.append(buildOverflowDots(dayEvents, MAX_TAGS_SCREEN));
+  if (!forPrint && rest.length > MAX_TAGS_SCREEN) {
+    eventsContainer.append(el('div', { class: 'day-more', text: `+${rest.length - MAX_TAGS_SCREEN}` }));
   }
 
-  const cell = el('div', {
+  return el('div', {
     class: cls,
     dataset: { date: dateStr },
     onClick: () => handleDayClick(dateStr),
   },
-    el('span', { class: 'day-number', text: d }),
+    el('span', { class: numberCls, text: d }),
     eventsContainer,
   );
-  return cell;
 }
 
 // ── Grid builder ──────────────────────────────────────────────────────────────
@@ -189,7 +238,7 @@ function goToday() {
   batchSelected.clear();
   batchMode = false;
   render();
-  showToast('📍 Retour à aujourd\'hui');
+  showToast('Retour à aujourd\'hui');
 }
 
 function handleDayClick(dateStr) {
@@ -220,10 +269,9 @@ function buildPrintLegend() {
   const items = allTypes.map(t => {
     const type = getEventType(t.id);
     if (!type) return null;
-    return el('div', { class: 'print-legend-item' },
-      el('div', { class: 'print-legend-color ' + (type.tagClass || 'tag-custom'), text: type.emoji }),
-      el('span', { text: type.label }),
-    );
+    const badge = el('div', { class: 'print-legend-color ' + (type.tagClass || 'tag-custom') });
+    badge.append(type.icon ? icon(type.icon) : document.createTextNode(type.emoji));
+    return el('div', { class: 'print-legend-item' }, badge, el('span', { text: type.label }));
   }).filter(Boolean);
   replaceChildren(document.getElementById('printLegend'), ...items);
 }

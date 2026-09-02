@@ -6,8 +6,9 @@ Export .ics pour Google Agenda / Apple Calendar.
 ## Stack
 - HTML / CSS / Vanilla JS
 - Single page, zero dépendance
-- Direction visuelle « natif » : police système, couleurs système iOS, un seul
-  accent (#007AFF), aucune webfont chargée. Les emoji sont réservés au contenu
+- Système visuel « Encre » : interface monochrome (encre / gris / blanc), toute
+  la couleur réservée à la donnée. Typo Schibsted Grotesk, jeu de 18 icônes
+  dessinées en sprite SVG dans `index.html`. Les emoji sont réservés au contenu
   (types perso choisis par l'utilisatrice), jamais à l'interface.
 - LocalStorage pour la persistance
 
@@ -23,7 +24,9 @@ Export .ics pour Google Agenda / Apple Calendar.
 - Retrait d'un type de la palette **sans toucher aux jours déjà planifiés**
   (le type est archivé, puis supprimé pour de bon quand plus aucun jour ne l'utilise)
 - Lien d'abonnement calendrier (Google Agenda, Apple Calendar) — sync auto
-- Résumé du mois affiché : matins, soirs, nuits, repos
+- Carte de charge du mois : jours travaillés, répartition matin/soir/nuit, repos
+- Grille lue comme une carte de couleurs : le shift colore le numéro du jour,
+  les autres événements s'affichent en toutes lettres sous le numéro
 - Impression
 
 ## Structure

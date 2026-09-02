@@ -9,27 +9,53 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Planify">
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <meta name="theme-color" content="#F6F6F8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=8">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
+<!-- ── Icônes ────────────────────────────────────────────────────────────────
+     Dessinées sur une grille de 24 avec un tracé de 1,75. Elles vivent ici et
+     s'appellent avec <use href="#ic-…"> : zéro requête, zéro dépendance, et
+     elles prennent la couleur du texte qui les contient. ──────────────────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <g id="ic-matin"><circle cx="12" cy="15" r="3.4"/><path d="M12 6.5V4M6.4 9.4 5 8M17.6 9.4 19 8M2.5 15h2M19.5 15h2M2.5 19.5h19"/></g>
+  <g id="ic-soir"><circle cx="12" cy="15" r="3.4"/><path d="M12 4v4.5M9.7 6.6 12 8.9l2.3-2.3M6.4 11.4 5 10M17.6 11.4 19 10M2.5 19.5h19"/></g>
+  <g id="ic-nuit"><path d="M20 14.3A8.4 8.4 0 0 1 9.7 4 8.4 8.4 0 1 0 20 14.3Z"/></g>
+  <g id="ic-repos"><path d="M3 18.5V9M3 14h18v4.5M21 14v-2.6a2 2 0 0 0-2-2h-7.5V14"/><circle cx="7.2" cy="11.4" r="1.9"/></g>
+  <g id="ic-vacances"><path d="M12 20.5v-9M3.6 11.5a8.4 8.4 0 0 1 16.8 0Z"/></g>
+  <g id="ic-print"><path d="M7 9.5V3.5h10v6M7 18.5H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14.5h10v6H7z"/></g>
+  <g id="ic-sync"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M14.5 15.5a2.6 2.6 0 0 0-4.4-1.2M9.5 17.5a2.6 2.6 0 0 0 4.4 1.2M9.6 12.9v1.5h1.5M14.4 20.1v-1.5h-1.5"/></g>
+  <g id="ic-cal"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></g>
+  <g id="ic-clock"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 2"/></g>
+  <g id="ic-half"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/></g>
+  <g id="ic-plus"><path d="M12 5.5v13M5.5 12h13"/></g>
+  <g id="ic-check"><path d="M4.8 12.6 9.6 17.4 19.2 6.8"/></g>
+  <g id="ic-close"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></g>
+  <g id="ic-left"><path d="M14.5 5 7.8 12l6.7 7"/></g>
+  <g id="ic-right"><path d="M9.5 5l6.7 7-6.7 7"/></g>
+  <g id="ic-select"><path d="M4 8.5 12 4l8 4.5-8 4.5zM4 15.5 12 20l8-4.5"/></g>
+  <g id="ic-trash"><path d="M4 7h16M9.5 7V4.8h5V7M6.6 7l.8 12.2A1.8 1.8 0 0 0 9.2 21h5.6a1.8 1.8 0 0 0 1.8-1.8L17.4 7"/></g>
+  <g id="ic-logout"><path d="M14 4.5H6.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H14M17 8.5l3.5 3.5L17 15.5M20 12H9.5"/></g>
+</defs></svg>
+
 <!-- ── Loader ──────────────────────────────────────────────────────────── -->
 <div id="appLoader">
   <div class="loader-inner">
-    <svg class="loader-logo-svg" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="80" height="80" rx="22" fill="url(#grad-loader)"/>
-      <circle class="ld ld1" cx="28" cy="32" r="4" fill="white" fill-opacity="0.5"/>
-      <circle class="ld ld2" cx="40" cy="32" r="4" fill="white" fill-opacity="0.5"/>
-      <circle class="ld ld3" cx="52" cy="32" r="4" fill="white" fill-opacity="0.5"/>
-      <circle class="ld ld4" cx="28" cy="48" r="4" fill="white" fill-opacity="0.5"/>
-      <circle class="ld ld5" cx="40" cy="48" r="4" fill="white" fill-opacity="0.5"/>
-      <circle class="ld ld6 ld-today" cx="52" cy="48" r="6" fill="white"/>
-      <defs>
-        <linearGradient id="grad-loader" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#0A84FF"/><stop offset="1" stop-color="#0060DF"/>
-        </linearGradient>
-      </defs>
+    <svg class="loader-logo-svg" width="80" height="80" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="36" height="36" rx="10.5" fill="#16171C"/>
+      <g fill="#FFFFFF" fill-opacity="0.42">
+        <rect class="ld ld1" x="10" y="13" width="4" height="4" rx="1.4"/>
+        <rect class="ld ld2" x="16" y="13" width="4" height="4" rx="1.4"/>
+        <rect class="ld ld3" x="22" y="13" width="4" height="4" rx="1.4"/>
+        <rect class="ld ld4" x="10" y="20" width="4" height="4" rx="1.4"/>
+        <rect class="ld ld5" x="16" y="20" width="4" height="4" rx="1.4"/>
+      </g>
+      <rect class="ld ld6 ld-today" x="21" y="19" width="6" height="6" rx="2" fill="#DE8A2C"/>
     </svg>
   </div>
 </div>
@@ -39,26 +65,23 @@
   <div class="auth-inner">
 
     <div class="auth-logo">
-      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="64" height="64" rx="18" fill="url(#ga)"/>
-        <circle cx="23" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
-        <circle cx="32" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
-        <circle cx="41" cy="27" r="3.5" fill="white" fill-opacity="0.5"/>
-        <circle cx="23" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
-        <circle cx="32" cy="39" r="3.5" fill="white" fill-opacity="0.5"/>
-        <circle cx="41" cy="39" r="5.5" fill="white"/>
-        <defs>
-          <linearGradient id="ga" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#0A84FF"/><stop offset="1" stop-color="#0060DF"/>
-          </linearGradient>
-        </defs>
+      <svg width="64" height="64" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="10.5" fill="#16171C"/>
+        <g fill="#FFFFFF" fill-opacity="0.42">
+          <rect x="10" y="13" width="4" height="4" rx="1.4"/>
+          <rect x="16" y="13" width="4" height="4" rx="1.4"/>
+          <rect x="22" y="13" width="4" height="4" rx="1.4"/>
+          <rect x="10" y="20" width="4" height="4" rx="1.4"/>
+          <rect x="16" y="20" width="4" height="4" rx="1.4"/>
+        </g>
+        <rect x="21" y="19" width="6" height="6" rx="2" fill="#DE8A2C"/>
       </svg>
       <h1 class="auth-app-name">Planify</h1>
     </div>
 
     <!-- Step 1: email -->
     <div id="stepEmail">
-      <h2 class="auth-title">Bienvenue 👋</h2>
+      <h2 class="auth-title">Bienvenue</h2>
       <p class="auth-subtitle">Entre ton email pour créer ton compte ou te connecter.</p>
       <div class="auth-form">
         <input type="email" id="authEmail" class="auth-input" placeholder="prenom@email.com"
@@ -71,7 +94,7 @@
 
     <!-- Step 2: OTP code -->
     <div id="stepOtpCode" style="display:none;">
-      <div class="auth-sent-icon">📩</div>
+      <div class="auth-sent-icon"><svg viewBox="0 0 24 24"><use href="#ic-check"/></svg></div>
       <h2 class="auth-title">Entre ton code</h2>
       <p class="auth-subtitle">Code à 6 chiffres envoyé à<br><strong id="otpEmailDisplay"></strong></p>
       <div class="otp-row">
@@ -87,7 +110,7 @@
 
     <!-- Step 3: session expired -->
     <div id="stepExpired" style="display:none;">
-      <div class="auth-sent-icon">🔑</div>
+      <div class="auth-sent-icon"><svg viewBox="0 0 24 24"><use href="#ic-logout"/></svg></div>
       <h2 class="auth-title">Session expirée</h2>
       <p class="auth-subtitle">Entre ton email pour te reconnecter.</p>
       <div class="auth-form">
@@ -104,49 +127,47 @@
 <!-- ── App ─────────────────────────────────────────────────────────────── -->
 <div id="screenApp" style="display:none;">
 
-  <!-- Header -->
+  <!-- En-tête : le mois est le titre de l'écran, les actions à droite -->
   <div class="header">
-    <div class="header-logo">
-      <svg class="logo-mark" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="36" height="36" rx="10" fill="url(#grad-logo)"/>
-        <circle cx="13" cy="15" r="2" fill="white" fill-opacity="0.5"/>
-        <circle cx="18" cy="15" r="2" fill="white" fill-opacity="0.5"/>
-        <circle cx="23" cy="15" r="2" fill="white" fill-opacity="0.5"/>
-        <circle cx="13" cy="22" r="2" fill="white" fill-opacity="0.5"/>
-        <circle cx="18" cy="22" r="2" fill="white" fill-opacity="0.5"/>
-        <circle cx="23" cy="22" r="3" fill="white"/>
-        <defs>
-          <linearGradient id="grad-logo" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#0A84FF"/><stop offset="1" stop-color="#0060DF"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <span class="logo-wordmark">Planify</span>
+    <div class="header-title">
+      <h1 class="month-label" id="monthLabel"></h1>
+      <span class="year-label" id="yearLabel"></span>
     </div>
     <div class="header-actions">
-      <button class="header-btn" onclick="printCalendar()" title="Imprimer">🖨️</button>
-      <button class="header-btn header-btn-user" id="userBtn" onclick="toggleUserMenu()" title="Mon compte">
+      <button class="icon-btn" onclick="printCalendar()" aria-label="Imprimer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-print"/></svg>
+      </button>
+      <button class="icon-btn" onclick="openSubscribeSheet()" aria-label="Synchroniser avec mon agenda">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-sync"/></svg>
+      </button>
+      <button class="avatar-btn" id="userBtn" onclick="toggleUserMenu()" aria-label="Mon compte">
         <span id="userAvatar"></span>
       </button>
     </div>
-    <!-- User menu -->
+    <!-- Menu utilisateur -->
     <div class="user-menu" id="userMenu" style="display:none;">
       <div class="user-menu-email" id="userMenuEmail"></div>
       <div class="user-menu-divider"></div>
-      <button class="user-menu-item" onclick="openSubscribeSheet()">📅 Synchroniser avec mon agenda</button>
-      <div class="user-menu-divider"></div>
-      <button class="user-menu-item danger" onclick="confirmSignOut()">Se déconnecter</button>
+      <button class="user-menu-item" onclick="openSubscribeSheet()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-sync"/></svg>
+        Synchroniser avec mon agenda
+      </button>
+      <button class="user-menu-item danger" onclick="confirmSignOut()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-logout"/></svg>
+        Se déconnecter
+      </button>
     </div>
   </div>
 
-  <!-- Month navigation -->
+  <!-- Navigation du mois -->
   <div class="month-nav">
-    <button class="month-nav-btn" onclick="changeMonth(-1)" aria-label="Mois précédent">‹</button>
-    <h2>
-      <span class="month-label" id="monthLabel"></span>
-      <span class="year-label" id="yearLabel"></span>
-    </h2>
-    <button class="month-nav-btn" onclick="changeMonth(1)" aria-label="Mois suivant">›</button>
+    <button class="nav-btn" onclick="changeMonth(-1)" aria-label="Mois précédent">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-left"/></svg>
+    </button>
+    <button class="nav-btn" onclick="changeMonth(1)" aria-label="Mois suivant">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-right"/></svg>
+    </button>
+    <button class="today-pill" onclick="goToday()">Aujourd'hui</button>
   </div>
 
   <!-- Résumé du mois affiché (construit par calendar.js) -->
@@ -159,6 +180,7 @@
       <span class="weekend">Sam</span><span class="weekend">Dim</span>
     </div>
     <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="cal-legend" id="calLegend"></div>
     <div class="print-legend" id="printLegend"></div>
     <div class="print-header">Planify — généré le <span id="printDate"></span></div>
   </div>
@@ -171,10 +193,7 @@
   <div id="toast" class="toast"></div>
 
   <!-- Bottom bar -->
-  <div class="bottom-bar" id="bottomBar">
-    <button class="batch-btn today-btn" onclick="goToday()">📍 Aujourd'hui</button>
-    <button class="batch-btn multiselect-btn" onclick="toggleBatchMode()">⚡ Multi-select</button>
-  </div>
+  <div class="bottom-bar" id="bottomBar"></div>
 
   <!-- Overlay -->
   <div class="overlay" id="overlay"></div>
@@ -215,7 +234,7 @@
   <div class="bottom-sheet" id="customSheet">
     <div class="sheet-handle"></div>
     <div class="modal-content">
-      <h3>✨ Nouvel événement</h3>
+      <h3>Nouvel événement</h3>
       <p class="modal-sub" id="customTargetLabel"></p>
       <div class="form-group">
         <label>Nom</label>
@@ -229,29 +248,29 @@
         <label>Durée</label>
         <div class="duration-selector">
           <div class="duration-option active" data-dur="allday" onclick="selectDuration('allday', this)">
-            <span class="dur-emoji">📅</span>
+            <span class="dur-emoji"><svg viewBox="0 0 24 24"><use href="#ic-cal"/></svg></span>
             <span class="dur-label">Journée</span>
             <span class="dur-desc">Toute la journée</span>
           </div>
           <div class="duration-option" data-dur="half" onclick="selectDuration('half', this)">
-            <span class="dur-emoji">🕐</span>
+            <span class="dur-emoji"><svg viewBox="0 0 24 24"><use href="#ic-half"/></svg></span>
             <span class="dur-label">Demi-journée</span>
             <span class="dur-desc">Matin ou après-midi</span>
           </div>
           <div class="duration-option" data-dur="custom" onclick="selectDuration('custom', this)">
-            <span class="dur-emoji">⏰</span>
+            <span class="dur-emoji"><svg viewBox="0 0 24 24"><use href="#ic-clock"/></svg></span>
             <span class="dur-label">Horaires</span>
             <span class="dur-desc">Début / fin</span>
           </div>
         </div>
         <div class="half-day-selector" id="halfDaySelector">
           <div class="half-day-option active" data-half="morning" onclick="selectHalfDay('morning', this)">
-            <span class="dur-emoji">☀️</span>
+            <span class="dur-emoji"><svg viewBox="0 0 24 24"><use href="#ic-matin"/></svg></span>
             <span class="dur-label">Matin</span>
             <span class="dur-desc">8h → 12h</span>
           </div>
           <div class="half-day-option" data-half="afternoon" onclick="selectHalfDay('afternoon', this)">
-            <span class="dur-emoji">🌅</span>
+            <span class="dur-emoji"><svg viewBox="0 0 24 24"><use href="#ic-soir"/></svg></span>
             <span class="dur-label">Après-midi</span>
             <span class="dur-desc">13h → 18h</span>
           </div>
@@ -270,7 +289,7 @@
         </div>
       </div>
       <label class="scope-row" id="scopeGroup">
-        <span>♻️ Garder dans mes types</span>
+        <span>Garder dans mes types</span>
         <input type="checkbox" id="customKeep" class="scope-switch">
       </label>
       <div class="form-actions">
@@ -286,17 +305,17 @@
 </div><!-- /screenApp -->
 
 <!-- Scripts — load order matters -->
-<script src="js/config.js?v=7"></script>
-<script src="js/utils.js?v=7"></script>
-<script src="js/palette.js?v=7"></script>
-<script src="js/storage.js?v=7"></script>
-<script src="js/toast.js?v=7"></script>
-<script src="js/calendar.js?v=7"></script>
-<script src="js/sheet.js?v=7"></script>
-<script src="js/modal.js?v=7"></script>
-<script src="js/auth.js?v=7"></script>
-<script src="js/subscribe.js?v=7"></script>
-<script src="js/app.js?v=7"></script>
+<script src="js/config.js?v=8"></script>
+<script src="js/utils.js?v=8"></script>
+<script src="js/palette.js?v=8"></script>
+<script src="js/storage.js?v=8"></script>
+<script src="js/toast.js?v=8"></script>
+<script src="js/calendar.js?v=8"></script>
+<script src="js/sheet.js?v=8"></script>
+<script src="js/modal.js?v=8"></script>
+<script src="js/auth.js?v=8"></script>
+<script src="js/subscribe.js?v=8"></script>
+<script src="js/app.js?v=8"></script>
 
 </body>
 </html>

@@ -165,7 +165,7 @@ async function applyTypeToTarget(type, target) {
 
 async function saveCustomEvent() {
   const rawName = document.getElementById('customName').value.trim();
-  if (!rawName) { showToast('⚠️ Donne un nom'); return; }
+  if (!rawName) { showToast('Donne un nom à l\'événement'); return; }
 
   const newType = buildCustomTypeFromForm(rawName);
   const target  = pendingTarget;
