@@ -23,6 +23,14 @@ const EVENT_TYPES = [
 // Populated at runtime from Supabase custom_types where id starts with 'preset_'.
 const DEFAULT_PRESETS = [];
 
+// Types perso "archivés" (is_deleted = true en base) : ils n'apparaissent plus
+// dans la palette de chips mais restent résolvables, donc les jours déjà
+// planifiés gardent leur événement (calendrier, impression et flux ICS).
+// Deux façons d'y atterrir :
+//   1) l'utilisateur retire le type de sa liste alors que des jours l'utilisent
+//   2) l'événement a été créé en mode "ponctuel" (jamais mis dans la palette)
+let archivedTypes = [];
+
 const EMOJI_OPTIONS = ['📋','🏃','💊','🧘','🎓','🚗','🛒','🎂','❤️','🔔','💈','📞','🏠','🎉','☕','🍴','🗼','💪','✨','💅','🐶','🎵','📚','✈️'];
 
 // Resolve an event id to its full type definition. Order matters: built-ins
@@ -36,6 +44,8 @@ function getEventType(id) {
   if (preset) return { ...preset, cssClass: 'custom', tagClass: 'tag-custom', category: 'custom' };
   const custom = customTypes.find(t => t.id === id);
   if (custom) return { ...custom, cssClass: 'custom', tagClass: 'tag-custom', category: 'custom' };
+  const archived = archivedTypes.find(t => t.id === id);
+  if (archived) return { ...archived, cssClass: 'custom', tagClass: 'tag-custom', category: 'custom', archived: true };
   return null;
 }
 

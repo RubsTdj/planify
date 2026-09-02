@@ -244,8 +244,9 @@ function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
     style: 'padding:4px 10px;border-radius:8px;border:none;background:#e5e7eb;color:#374151;font-weight:700;font-size:12px;cursor:pointer;margin-left:4px;',
     text: 'Non',
   });
+  // "Retirer" et pas "Supprimer" : les jours déjà planifiés ne bougent pas.
   const prompt = el('span',
-    { style: 'font-size:12px;font-weight:700;color:#dc2626;flex:1;', text: 'Supprimer ?' });
+    { style: 'font-size:12px;font-weight:700;color:#dc2626;flex:1;', text: 'Retirer ?' });
 
   replaceChildren(chip, prompt, yes, no);
 
@@ -269,18 +270,33 @@ function showDeleteConfirm(chip, typeId, typeName, dateStr, isBatch) {
 }
 
 // ── Mutations (optimistic UI + persistence) ──────────────────────────────────
-async function deletePersoType(typeId, typeName) {
-  // Optimistic: remove from in-memory events and types.
+
+// Nombre de jours du planning qui utilisent encore ce type.
+function countDaysUsingType(typeId) {
+  let n = 0;
   for (const dateStr in events) {
-    events[dateStr] = events[dateStr].filter(e => e !== typeId);
-    if (events[dateStr].length === 0) delete events[dateStr];
-    delete animatedTags[dateStr + '|' + typeId];
+    if (events[dateStr].includes(typeId)) n++;
   }
+  return n;
+}
+
+// Retire un type perso de la palette. Les jours déjà planifiés le gardent :
+// le type passe simplement en "archivé" (invisible dans les chips, toujours
+// affiché dans le calendrier et exporté dans l'ICS). S'il n'est utilisé nulle
+// part, on le supprime pour de bon.
+async function deletePersoType(typeId, typeName) {
+  const usedOn = countDaysUsingType(typeId);
+  const def    = customTypes.find(t => t.id === typeId)
+              || DEFAULT_PRESETS.find(t => t.id === typeId);
+
   customTypes = customTypes.filter(t => t.id !== typeId);
   const presetIdx = DEFAULT_PRESETS.findIndex(t => t.id === typeId);
   if (presetIdx !== -1) DEFAULT_PRESETS.splice(presetIdx, 1);
+  if (usedOn > 0 && def) archivedTypes.push(def);
 
-  showToast(`🗑️ "${typeName}" supprimé`);
+  showToast(usedOn > 0
+    ? `🗑️ "${typeName}" retiré · ${usedOn} jour(s) conservé(s)`
+    : `🗑️ "${typeName}" supprimé`);
   render();
 
   const isBatch = batchMode && batchSelected.size > 0;
@@ -300,7 +316,8 @@ async function deletePersoType(typeId, typeName) {
 
   if (getAllPersoTypes().length === 0) manageCustomMode = false;
 
-  await deleteCustomType(typeId);
+  if (usedOn > 0) await archiveCustomType(typeId);
+  else            await purgeCustomType(typeId);
 }
 
 async function addEvent(typeId, isBatch) {
@@ -356,6 +373,18 @@ async function removeEventFromDay(dateStr, evtId) {
   buildChips(dateStr, false);
 
   await saveEventRemove(dateStr, evtId);
+  await purgeArchivedTypeIfUnused(evtId);
+}
+
+// Un type archivé n'existe que pour les jours qui le référencent (événement
+// ponctuel ou type retiré de la palette). Quand le dernier jour disparaît,
+// la ligne custom_types n'a plus de raison d'être.
+async function purgeArchivedTypeIfUnused(typeId) {
+  const idx = archivedTypes.findIndex(t => t.id === typeId);
+  if (idx === -1) return;
+  if (countDaysUsingType(typeId) > 0) return;
+  archivedTypes.splice(idx, 1);
+  await purgeCustomType(typeId);
 }
 
 // ── Batch mode toggles + bottom-bar state ────────────────────────────────────
