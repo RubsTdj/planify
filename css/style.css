@@ -61,11 +61,13 @@ button, input, a, [onclick] { touch-action: manipulation; }
 button { font-family: var(--font); }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
-/* Toutes les icônes du sprite partagent le même tracé. */
+/* Toutes les icônes du sprite partagent le même tracé, et une taille par
+   défaut : un SVG sans dimension prend sa taille intrinsèque (300x150), ce qui
+   a déjà cassé trois écrans. Les contextes qui veulent autre chose surchargent. */
 svg[viewBox="0 0 24 24"] {
   fill: none; stroke: currentColor;
   stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
-  display: block;
+  display: block; width: 18px; height: 18px; flex: none;
 }
 
 /* ── Loader ───────────────────────────────────────────────────────────── */
@@ -674,6 +676,12 @@ svg[viewBox="0 0 24 24"] {
   cursor: pointer; padding: 6px 2px; flex: none;
 }
 .share-row-act:active { opacity: .5; }
+
+/* Lignes du sélecteur de planning : cliquables, avec la coche du planning
+   actuellement affiché. */
+.share-row-pick { cursor: pointer; }
+.share-row-pick:active { background: var(--fill); }
+.share-check { width: 20px; height: 20px; color: var(--ink); stroke-width: 2.2; }
 .share-empty { font-size: 14px; color: var(--ink-4); padding: 6px 0; }
 
 /* Bandeau de lecture seule, à la place de la barre d'action */

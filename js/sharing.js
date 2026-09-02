@@ -137,16 +137,22 @@ function renderPlanningSwitch() {
   if (switchable) btn.append(icon('down'));
 }
 
-function openPlanningPicker() {
-  if (teammates.length === 0) return;
+// La liste des plannings consultables. Séparée de l'ouverture pour pouvoir la
+// redessiner après un refetch sans rejouer l'animation de la feuille.
+function renderPlanningPickerRows() {
   const sheet = document.getElementById('planningSheet');
+  if (!sheet) return;
 
   const row = (label, sub, active, onClick) => {
-    const r = el('div', { class: 'share-row', onClick },
+    const r = el('div', { class: 'share-row share-row-pick', onClick },
       el('div', { class: 'share-avatar', text: initials(label) }),
       el('div', { class: 'share-row-tx' }, el('b', { text: label }), el('span', { text: sub })),
     );
-    if (active) r.append(icon('check'));
+    if (active) {
+      const check = icon('check');
+      check.classList.add('share-check');
+      r.append(check);
+    }
     return r;
   };
 
@@ -164,15 +170,72 @@ function openPlanningPicker() {
         () => { closeAllSheets(); switchToPlanning(m); })),
     ),
   );
+}
 
+function openPlanningPicker() {
+  if (teammates.length === 0) return;
+  const sheet = document.getElementById('planningSheet');
+
+  renderPlanningPickerRows();
   document.getElementById('overlay').classList.add('visible');
   sheet.classList.add('visible');
+
+  // La liste s'affiche tout de suite avec ce qu'on a, puis se corrige seule si
+  // l'équipe a bougé depuis. Personne n'attend un aller-retour réseau pour
+  // voir un écran qu'on peut déjà dessiner.
+  refreshShared().then(() => {
+    if (!sheet.classList.contains('visible')) return;
+    if (teammates.length === 0) { closePlanningSheet(); return; }
+    renderPlanningPickerRows();
+  });
 }
 
 function closePlanningSheet() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('planningSheet').classList.remove('visible');
 }
+
+// ── Rafraîchissement ─────────────────────────────────────────────────────────
+// L'app ne tenait ses données d'équipe que du démarrage : un collègue qui
+// rejoignait le service n'apparaissait qu'après avoir tué l'app et l'avoir
+// relancée. Deux moments suffisent à couvrir le besoin sans temps réel, qui
+// serait démesuré à dix personnes : le retour de l'app au premier plan, et
+// l'ouverture du sélecteur de planning.
+// On ne throttle pas dans le temps — un rafraîchissement demandé ne doit jamais
+// être avalé — on déduplique : deux appels rapprochés partagent la même requête
+// au lieu de se marcher dessus.
+let refreshInFlight = null;
+
+function refreshShared() {
+  if (!currentUserId()) return Promise.resolve();
+  // Pendant une sélection multiple, l'utilisatrice est en pleine saisie : on
+  // ne lui redessine pas la grille sous les doigts.
+  if (batchMode) return Promise.resolve();
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = doRefresh().finally(() => { refreshInFlight = null; });
+  return refreshInFlight;
+}
+
+async function doRefresh() {
+  try {
+    await loadSharing();
+    await loadData(viewedUserId());
+    render();
+    // Si la feuille du service est restée ouverte (on est sorti de l'app pour
+    // envoyer le code, on revient), elle doit montrer qui vient d'arriver.
+    if (document.getElementById('shareSheet')?.classList.contains('visible')) {
+      buildShareSheet();
+    }
+  } catch (err) {
+    console.warn('refresh:', err);
+  }
+}
+
+// iOS ne rejoue pas la page au retour dans l'app : sans ça, l'écran affiche
+// encore l'état d'il y a deux heures.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshShared();
+});
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 function rpcErrorMessage(error, fallback) {
