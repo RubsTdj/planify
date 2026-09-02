@@ -13,8 +13,12 @@ Export .ics pour Google Agenda / Apple Calendar.
 - Shifts : Matin ☀️, Soir 🌇, Nuit 🌙
 - Repos 😴, Vacances 🏖️
 - Événements personnels (presets + création libre avec emoji)
+  - **Ponctuel** : posé directement sur le(s) jour(s), sans encombrer la palette
+  - **Réutilisable** : gardé dans « mes types » pour le réappliquer plus tard
 - Multi-select : appliquer un type sur plusieurs jours d'un coup
-- Suppression individuelle par jour ou par type
+- Suppression individuelle par jour
+- Retrait d'un type de la palette **sans toucher aux jours déjà planifiés**
+  (le type est archivé, puis supprimé pour de bon quand plus aucun jour ne l'utilise)
 - Lien d'abonnement calendrier (Google Agenda, Apple Calendar) — sync auto
 - Impression
 

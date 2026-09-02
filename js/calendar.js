@@ -168,7 +168,18 @@ function handleDayClick(dateStr) {
 
 // ── Print legend ─────────────────────────────────────────────────────────────
 function buildPrintLegend() {
-  const allTypes = [...EVENT_TYPES, ...getAllPersoTypes()];
+  // Les types archivés (ponctuels ou retirés de la palette) ne sont pas dans
+  // getAllPersoTypes() : on les ajoute s'ils sont utilisés dans le mois affiché.
+  const usedThisMonth = new Set();
+  const prefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-`;
+  for (const dateStr in events) {
+    if (dateStr.startsWith(prefix)) events[dateStr].forEach(id => usedThisMonth.add(id));
+  }
+  const allTypes = [
+    ...EVENT_TYPES,
+    ...getAllPersoTypes(),
+    ...archivedTypes.filter(t => usedThisMonth.has(t.id)),
+  ];
   const items = allTypes.map(t => {
     const type = getEventType(t.id);
     if (!type) return null;

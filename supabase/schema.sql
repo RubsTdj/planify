@@ -13,7 +13,10 @@ create table if not exists public.events (
 
 -- ─── custom_types ─────────────────────────────────────────────────────────────
 -- All perso event types: presets (id starts with 'preset_') + user-created (id starts with 'custom_').
--- is_deleted is kept for soft-delete safety but hard deletes are used in practice.
+-- is_deleted = type "archivé" : il n'apparaît plus dans la palette de l'app mais
+-- reste résolvable pour les jours de `events` qui le référencent encore (retrait
+-- d'un type déjà utilisé, ou événement créé en mode "ponctuel"). Le hard delete
+-- n'a lieu que lorsque plus aucun jour ne l'utilise.
 create table if not exists public.custom_types (
   id          text        primary key,   -- 'preset_xxx' or 'custom_<timestamp>'
   label       text        not null,

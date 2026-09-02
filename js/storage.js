@@ -27,10 +27,12 @@ async function loadData() {
       sb.from('events')
         .select('date, type_id')
         .eq('user_id', uid),
+      // Les types archivés (is_deleted) sont chargés eux aussi : ils ne sont pas
+      // proposés dans la palette mais restent nécessaires pour afficher les
+      // jours du planning qui les référencent encore.
       sb.from('custom_types')
         .select('*')
         .eq('user_id', uid)
-        .eq('is_deleted', false)
         .order('created_at', { ascending: true }),
     ]);
     if (e1) throw e1;
@@ -43,11 +45,13 @@ async function loadData() {
     }
 
     DEFAULT_PRESETS.length = 0;
-    customTypes = [];
+    customTypes   = [];
+    archivedTypes = [];
     for (const row of (ctRows || [])) {
       const t = dbRowToCustomType(row);
-      if (row.id.startsWith('preset_')) DEFAULT_PRESETS.push(t);
-      else                              customTypes.push(t);
+      if (row.is_deleted)                    archivedTypes.push(t);
+      else if (row.id.startsWith('preset_')) DEFAULT_PRESETS.push(t);
+      else                                   customTypes.push(t);
     }
   } catch (err) {
     console.error('Supabase loadData error:', err);
@@ -78,26 +82,32 @@ async function saveEventBatch(dates, typeId) {
   reportError('saveEventBatch', error, true);
 }
 
-async function saveCustomType(newType) {
-  const row = { ...customTypeToDbRow(newType), user_id: currentUserId() };
+// `archived: true` → le type est enregistré hors palette (événement ponctuel).
+async function saveCustomType(newType, archived = false) {
+  const row = { ...customTypeToDbRow(newType), is_deleted: archived, user_id: currentUserId() };
   const { error } = await sb.from('custom_types').insert(row);
   reportError('saveCustomType', error, true);
 }
 
-// Hard-delete a custom or preset type AND every event that referenced it.
-async function deleteCustomType(typeId) {
-  const uid = currentUserId();
-  const { error: e1 } = await sb.from('custom_types')
+// Retire un type de la palette SANS toucher aux jours qui l'utilisent.
+// Le soft-delete garde la ligne en base pour que le calendrier et le flux ICS
+// puissent continuer à résoudre le label / l'emoji / les horaires.
+async function archiveCustomType(typeId) {
+  const { error } = await sb.from('custom_types')
+    .update({ is_deleted: true })
+    .eq('id', typeId)
+    .eq('user_id', currentUserId());
+  reportError('archiveCustomType', error);
+}
+
+// Suppression définitive de la ligne custom_types. Réservée aux types qui
+// ne sont plus référencés par aucun jour (sinon on perdrait l'affichage).
+async function purgeCustomType(typeId) {
+  const { error } = await sb.from('custom_types')
     .delete()
     .eq('id', typeId)
-    .eq('user_id', uid);
-  if (e1) console.error('deleteCustomType:', e1);
-
-  const { error: e2 } = await sb.from('events')
-    .delete()
-    .eq('type_id', typeId)
-    .eq('user_id', uid);
-  if (e2) console.error('deleteCustomType events cleanup:', e2);
+    .eq('user_id', currentUserId());
+  if (error) console.error('purgeCustomType:', error);
 }
 
 // ── DB row ↔ in-memory type translation ──────────────────────────────────────

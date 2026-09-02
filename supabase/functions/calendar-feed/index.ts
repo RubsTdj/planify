@@ -227,8 +227,11 @@ Deno.serve(async (req) => {
 
   const [{ data: events, error: e1 }, { data: customs, error: e2 }] = await Promise.all([
     admin.from('events').select('date, type_id').eq('user_id', userId),
+    // Pas de filtre sur is_deleted : un type archivé (retiré de la palette ou
+    // créé en "ponctuel") reste référencé par des jours du planning, ses
+    // événements doivent continuer à sortir dans le flux.
     admin.from('custom_types').select('id, label, emoji, all_day, start_time, end_time')
-      .eq('user_id', userId).eq('is_deleted', false),
+      .eq('user_id', userId),
   ]);
 
   if (e1 || e2) {
