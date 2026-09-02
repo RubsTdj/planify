@@ -57,6 +57,7 @@ function describeTarget(target) {
 
 // ── Open / close ─────────────────────────────────────────────────────────────
 function openCustomSheet() {
+  if (isReadOnly()) return;
   // La cible est figée MAINTENANT : closeSheet() ne touche pas à selectedDate
   // ni à batchSelected, mais l'utilisateur ne doit pas pouvoir la faire bouger
   // pendant qu'il remplit le formulaire.

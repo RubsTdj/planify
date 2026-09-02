@@ -34,6 +34,7 @@ function render() {
   if (monthEl) monthEl.textContent = MONTHS_FR[currentMonth];
   if (yearEl)  yearEl.textContent  = currentYear;
 
+  renderPlanningSwitch();
   renderMonthSummary();
   renderCalendarLegend();
   renderCalendar();
@@ -245,7 +246,7 @@ function goToday() {
 }
 
 function handleDayClick(dateStr) {
-  if (batchMode) {
+  if (batchMode && !isReadOnly()) {
     if (batchSelected.has(dateStr)) batchSelected.delete(dateStr);
     else                            batchSelected.add(dateStr);
     render();

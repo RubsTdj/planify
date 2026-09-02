@@ -145,6 +145,7 @@ async function launchApp() {
       // Minimum loader display time so the UI doesn't flash on fast connections.
     await Promise.all([
       loadData(),
+      loadSharing().then(ensureProfile).catch(err => console.warn('sharing:', err)),
       new Promise(r => setTimeout(r, 2500)),
     ]);
     hideLoader();
@@ -154,6 +155,8 @@ async function launchApp() {
     initSwipeToClose(document.getElementById('eventSheet'),     closeSheet);
     initSwipeToClose(document.getElementById('customSheet'),    closeCustomSheet);
     initSwipeToClose(document.getElementById('subscribeSheet'), closeSubscribeSheet);
+    initSwipeToClose(document.getElementById('shareSheet'),     closeShareSheet);
+    initSwipeToClose(document.getElementById('planningSheet'),  closePlanningSheet);
   } catch (err) {
     console.error('launchApp error:', err);
     hideLoader();
@@ -174,12 +177,16 @@ function setUserAvatar() {
 // La synchro agenda a son propre bouton dans l'en-tête : la dupliquer ici
 // n'apportait rien. Le menu du compte ne sert plus qu'à se déconnecter.
 function buildSignedOutMenu(menu) {
+  const shareBtn = el('button', { class: 'user-menu-item', onClick: openShareSheet },
+    icon('users'), 'Partage de planning');
   const signOutBtn = el('button', { class: 'user-menu-item danger', onClick: confirmSignOut },
     icon('logout'), 'Se déconnecter');
 
   replaceChildren(
     menu,
     el('div', { class: 'user-menu-email', text: currentUser?.email || '' }),
+    el('div', { class: 'user-menu-divider' }),
+    shareBtn,
     el('div', { class: 'user-menu-divider' }),
     signOutBtn,
   );

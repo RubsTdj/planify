@@ -49,6 +49,8 @@ function initSwipeToClose(sheetEl, closeFn) {
 // ── Open / close ─────────────────────────────────────────────────────────────
 function openSheet(dateStr, isBatch) {
   manageCustomMode = false;
+  // Sur le planning de quelqu'un d'autre : consultation, jamais d'édition.
+  if (isReadOnly()) { openReadOnlySheet(dateStr); return; }
 
   const overlay        = document.getElementById('overlay');
   const sheet          = document.getElementById('eventSheet');
@@ -73,6 +75,7 @@ function openSheet(dateStr, isBatch) {
     divider.style.display        = 'none';
   }
 
+  showChipSections();
   buildChips(dateStr, isBatch);
   overlay.classList.add('visible');
   sheet.classList.add('visible');
@@ -80,12 +83,64 @@ function openSheet(dateStr, isBatch) {
 
 function openBatchSheet() { openSheet(null, true); }
 
+// Feuille de consultation : la liste du jour, sans retrait ni palette.
+function openReadOnlySheet(dateStr) {
+  if (!dateStr) return;
+  const d         = new Date(dateStr + 'T00:00:00');
+  const dayEvents = events[dateStr] || [];
+
+  document.getElementById('sheetTitle').textContent = `${DAYS_FR[d.getDay()]} ${d.getDate()} ${MONTHS_FR[d.getMonth()]}`;
+  document.getElementById('sheetDate').textContent  = viewingShare ? `Planning de ${viewingShare.name}` : '';
+
+  const section = document.getElementById('sheetCurrent');
+  const divider = document.getElementById('sheetDivider');
+  section.style.display = 'block';
+  divider.style.display = 'none';
+
+  const list = document.getElementById('currentEventsList');
+  replaceChildren(list, ...(dayEvents.length
+    ? dayEvents.map(id => {
+        const type = getEventType(id);
+        if (!type) return null;
+        const badge = el('div', { class: `cev-icon ${type.cssClass || 'custom'}` });
+        badge.append(typeBadgeContent(type));
+        return el('div', { class: 'current-event-item' },
+          el('div', { class: 'current-event-left' }, badge,
+            el('div', {},
+              el('div', { class: 'cev-label', text: type.label }),
+              el('div', { class: 'cev-time',  text: timeLabelFor(type) }),
+            ),
+          ),
+        );
+      }).filter(Boolean)
+    : [el('div', { class: 'share-empty', text: 'Rien de prévu ce jour-là.' })]));
+
+  // Les sections d'ajout n'ont pas lieu d'être en lecture seule.
+  ['workChips', 'offChips', 'vacationChips', 'customChips'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) c.closest('.sheet-section').style.display = 'none';
+  });
+
+  document.getElementById('overlay').classList.add('visible');
+  document.getElementById('eventSheet').classList.add('visible');
+}
+
+// Les sections masquées par la lecture seule reviennent sur mon planning.
+function showChipSections() {
+  ['workChips', 'offChips', 'vacationChips', 'customChips'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) c.closest('.sheet-section').style.display = '';
+  });
+}
+
 function closeAllSheets() {
   document.getElementById('overlay').classList.remove('visible');
   document.getElementById('eventSheet').classList.remove('visible');
   document.getElementById('customSheet').classList.remove('visible');
-  const sub = document.getElementById('subscribeSheet');
-  if (sub) sub.classList.remove('visible');
+  ['subscribeSheet', 'shareSheet', 'planningSheet'].forEach(id => {
+    const s = document.getElementById(id);
+    if (s) s.classList.remove('visible');
+  });
   manageCustomMode = false;
 }
 
@@ -293,6 +348,7 @@ function countDaysUsingType(typeId) {
 // affiché dans le calendrier et exporté dans l'ICS). S'il n'est utilisé nulle
 // part, on le supprime pour de bon.
 async function deletePersoType(typeId, typeName) {
+  if (isReadOnly()) return;
   const usedOn = countDaysUsingType(typeId);
   const def    = customTypes.find(t => t.id === typeId)
               || DEFAULT_PRESETS.find(t => t.id === typeId);
@@ -329,7 +385,7 @@ async function deletePersoType(typeId, typeName) {
 }
 
 async function addEvent(typeId, isBatch) {
-  if (manageCustomMode) return;
+  if (manageCustomMode || isReadOnly()) return;
   const type = getEventType(typeId);
   if (!type) return;
 
@@ -360,7 +416,7 @@ async function addEvent(typeId, isBatch) {
 }
 
 async function removeEventFromDay(dateStr, evtId) {
-  if (!events[dateStr]) return;
+  if (isReadOnly() || !events[dateStr]) return;
   events[dateStr] = events[dateStr].filter(e => e !== evtId);
   if (events[dateStr].length === 0) delete events[dateStr];
   delete animatedTags[dateStr + '|' + evtId];
@@ -397,6 +453,7 @@ async function purgeArchivedTypeIfUnused(typeId) {
 
 // ── Batch mode toggles + bottom-bar state ────────────────────────────────────
 function toggleBatchMode() {
+  if (isReadOnly()) return;
   batchMode = !batchMode;
   batchSelected.clear();
   if (batchMode) showToast('Tapez les jours puis « Appliquer »');
@@ -422,6 +479,15 @@ function updateBatchUI() {
       el('button', { class: 'batch-btn', text: 'Appliquer',
                      style: 'flex:1;opacity:0.35;cursor:default;',
                      attrs: { disabled: 'disabled' } }),
+    );
+  } else if (isReadOnly()) {
+    counter.classList.remove('visible');
+    replaceChildren(bottomBar,
+      el('div', { class: 'readonly-bar' },
+        icon('eye'),
+        el('span', {}, 'Lecture seule · ', el('b', { text: viewingShare.name })),
+      ),
+      el('button', { class: 'batch-btn', onClick: () => switchToPlanning(null) }, 'Revenir'),
     );
   } else {
     counter.classList.remove('visible');

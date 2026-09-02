@@ -17,9 +17,12 @@ function reportError(where, error, ignoreDuplicate = false) {
   showToast('Erreur de sauvegarde');
 }
 
-// ── Load: fetch all events + custom types for the current user ───────────────
-async function loadData() {
-  const uid = currentUserId();
+// ── Load: fetch all events + custom types for one owner ─────────────────────
+// `ownerId` par défaut = moi. En consultant un planning partagé, c'est l'id de
+// l'autre : ce sont les politiques RLS qui autorisent (ou non) la lecture et
+// qui filtrent selon le périmètre du partage. Le client ne décide de rien.
+async function loadData(ownerId) {
+  const uid = ownerId || currentUserId();
   if (!uid) return;
 
   try {

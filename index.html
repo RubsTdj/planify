@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=11">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
@@ -42,6 +42,9 @@
   <g id="ic-trash"><path d="M4 7h16M9.5 7V4.8h5V7M6.6 7l.8 12.2A1.8 1.8 0 0 0 9.2 21h5.6a1.8 1.8 0 0 0 1.8-1.8L17.4 7"/></g>
   <g id="ic-copy"><rect x="9" y="9" width="11.5" height="11.5" rx="3"/><path d="M15 6.5v-1a2 2 0 0 0-2-2H5.5a2 2 0 0 0-2 2V13a2 2 0 0 0 2 2h1"/></g>
   <g id="ic-refresh"><path d="M20.5 12a8.5 8.5 0 1 1-2.8-6.3M20.5 3.5v5h-5"/></g>
+  <g id="ic-users"><circle cx="9" cy="8" r="3.6"/><path d="M2.5 20c0-3.6 2.9-6.2 6.5-6.2s6.5 2.6 6.5 6.2M16.4 5.2a3.6 3.6 0 0 1 0 6.6M18 14.4c2.1.7 3.5 2.4 3.5 4.6"/></g>
+  <g id="ic-down"><path d="M5.5 9l6.5 6.5L18.5 9"/></g>
+  <g id="ic-eye"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3.2"/></g>
   <g id="ic-logout"><path d="M14 4.5H6.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H14M17 8.5l3.5 3.5L17 15.5M20 12H9.5"/></g>
 </defs></svg>
 
@@ -133,7 +136,9 @@
   <div class="header">
     <div class="header-title">
       <h1 class="month-label" id="monthLabel"></h1>
-      <span class="year-label" id="yearLabel"></span>
+      <button class="planning-switch" id="planningSwitch" onclick="openPlanningPicker()">
+        <span class="year-label" id="yearLabel"></span>
+      </button>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="printCalendar()" aria-label="Imprimer">
@@ -149,6 +154,11 @@
     <!-- Menu utilisateur -->
     <div class="user-menu" id="userMenu" style="display:none;">
       <div class="user-menu-email" id="userMenuEmail"></div>
+      <div class="user-menu-divider"></div>
+      <button class="user-menu-item" onclick="openShareSheet()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-users"/></svg>
+        Partage de planning
+      </button>
       <div class="user-menu-divider"></div>
       <button class="user-menu-item danger" onclick="confirmSignOut()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-logout"/></svg>
@@ -296,20 +306,25 @@
   <!-- Calendar subscription sheet (content built dynamically by subscribe.js) -->
   <div class="bottom-sheet" id="subscribeSheet"></div>
 
+  <!-- Partage de planning (construit par sharing.js) -->
+  <div class="bottom-sheet" id="shareSheet"></div>
+  <div class="bottom-sheet" id="planningSheet"></div>
+
 </div><!-- /screenApp -->
 
 <!-- Scripts — load order matters -->
-<script src="js/config.js?v=10"></script>
-<script src="js/utils.js?v=10"></script>
-<script src="js/palette.js?v=10"></script>
-<script src="js/storage.js?v=10"></script>
-<script src="js/toast.js?v=10"></script>
-<script src="js/calendar.js?v=10"></script>
-<script src="js/sheet.js?v=10"></script>
-<script src="js/modal.js?v=10"></script>
-<script src="js/auth.js?v=10"></script>
-<script src="js/subscribe.js?v=10"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/config.js?v=11"></script>
+<script src="js/utils.js?v=11"></script>
+<script src="js/palette.js?v=11"></script>
+<script src="js/storage.js?v=11"></script>
+<script src="js/toast.js?v=11"></script>
+<script src="js/calendar.js?v=11"></script>
+<script src="js/sheet.js?v=11"></script>
+<script src="js/modal.js?v=11"></script>
+<script src="js/auth.js?v=11"></script>
+<script src="js/subscribe.js?v=11"></script>
+<script src="js/sharing.js?v=11"></script>
+<script src="js/app.js?v=11"></script>
 
 </body>
 </html>
