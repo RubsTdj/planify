@@ -106,7 +106,7 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
   const header = el('div', { class: 'sheet-header' },
     el('h3', { text: 'Synchroniser avec mon agenda' }),
     el('div', { class: 'sheet-date',
-      text: 'Modif dans Planify → ton agenda se met à jour automatiquement (toutes les quelques heures).' }),
+      text: 'Ton agenda se met à jour tout seul, quelques heures après chaque modification dans Planify.' }),
   );
 
   // URL display block (read-only, cliquable pour copier).
@@ -125,7 +125,7 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
 
   // Apple Calendar : webcal:// déclenche directement la fiche d'abonnement.
   const appleBtn = el('a', {
-    class: 'btn btn-ghost subscribe-deeplink',
+    class: 'btn btn-ghost',
     attrs: { href: webcalUrl },
     text: 'Ajouter à Apple Calendar',
   });
@@ -133,7 +133,7 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
   // Google Calendar : pas de schéma deep-link, on ouvre la page d'ajout par URL.
   const googleHref = `https://calendar.google.com/calendar/u/0/r/settings/addbyurl?cid=${encodeURIComponent(httpsUrl)}`;
   const googleBtn = el('a', {
-    class: 'btn btn-ghost subscribe-deeplink',
+    class: 'btn btn-ghost',
     attrs: { href: googleHref, target: '_blank', rel: 'noopener noreferrer' },
     text: 'Ajouter à Google Agenda',
   });
@@ -158,15 +158,8 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
       el('label', { text: 'Lien d\'abonnement' }),
       urlInput,
     ),
-    copyBtn,
-    el('div', { style: 'height:12px;' }),
-    appleBtn,
-    el('div', { style: 'height:8px;' }),
-    googleBtn,
-    el('div', { style: 'height:24px;' }),
-    rotateBtn,
-    el('div', { style: 'height:8px;' }),
-    closeBtn,
+    el('div', { class: 'subscribe-actions' }, copyBtn, appleBtn, googleBtn),
+    el('div', { class: 'subscribe-footer' }, rotateBtn, closeBtn),
   );
 
   replaceChildren(sheet, handle, header, content);

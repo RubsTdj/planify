@@ -459,7 +459,7 @@ svg[viewBox="0 0 24 24"] {
 
 .sheet-header { padding: 0 18px 14px; }
 .sheet-header h3 { font-size: 21px; font-weight: 700; letter-spacing: -.025em; }
-.sheet-date { font-size: 13.5px; color: var(--ink-3); }
+.sheet-date { font-size: 13.5px; color: var(--ink-3); line-height: 1.4; }
 
 .sheet-current { padding: 0 18px 12px; }
 .sheet-current-title, .sheet-section-title {
@@ -549,7 +549,7 @@ svg[viewBox="0 0 24 24"] {
 .manage-custom-btn.active { color: var(--danger); }
 
 /* ── Feuille de création ─────────────────────────────────────────────── */
-.modal-content { padding: 0 18px 20px; }
+.modal-content { padding: 0 18px calc(20px + env(safe-area-inset-bottom, 0px)); }
 .modal-content h3 { font-size: 21px; font-weight: 700; letter-spacing: -.025em; margin-bottom: 16px; }
 .form-group { margin-bottom: 16px; }
 .form-group label {
@@ -616,9 +616,14 @@ svg[viewBox="0 0 24 24"] {
 
 .form-actions { display: flex; gap: 9px; margin-top: 22px; }
 .btn {
-  flex: 1; height: 50px; border: none; border-radius: 15px; font-family: var(--font);
-  font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity .15s;
+  width: 100%; height: 50px; border: none; border-radius: 15px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font); font-size: 16px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s;
+  text-decoration: none;
 }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.form-actions .btn { width: auto; flex: 1; }
 .btn:active { opacity: .7; }
 .btn-primary { background: var(--ink); color: #fff; }
 .btn-ghost   { background: var(--fill); color: var(--ink); }
@@ -629,10 +634,12 @@ svg[viewBox="0 0 24 24"] {
   color: var(--ink); background: var(--fill);
   user-select: all; -webkit-user-select: all;
 }
-.subscribe-deeplink {
-  display: flex; align-items: center; justify-content: center;
-  text-decoration: none; width: 100%;
+.subscribe-actions { display: flex; flex-direction: column; gap: 9px; }
+.subscribe-footer {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--rule);
 }
+.subscribe-footer .manage-custom-btn { justify-content: center; margin-top: 0; }
 
 /* ── Impression ──────────────────────────────────────────────────────── */
 /* `html.printing` est posé juste avant window.print() (voir calendar.js) pour
