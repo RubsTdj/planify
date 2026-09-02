@@ -172,26 +172,15 @@ function setUserAvatar() {
   if (menuEmail) menuEmail.textContent = email;
 }
 
+// La synchro agenda a son propre bouton dans l'en-tête : la dupliquer ici
+// n'apportait rien. Le menu du compte ne sert plus qu'à se déconnecter.
 function buildSignedOutMenu(menu) {
-  const email   = currentUser?.email || '';
-  const emailEl = el('div', { class: 'user-menu-email', text: email });
-
-  const subscribeBtn = el('button', {
-    class: 'user-menu-item',
-    text:  'Synchroniser avec mon agenda',
-    onClick: openSubscribeSheet,
-  });
-  const signOutBtn = el('button', {
-    class: 'user-menu-item danger',
-    text:  'Se déconnecter',
-    onClick: confirmSignOut,
-  });
+  const signOutBtn = el('button', { class: 'user-menu-item danger', onClick: confirmSignOut },
+    icon('logout'), 'Se déconnecter');
 
   replaceChildren(
     menu,
-    emailEl,
-    el('div', { class: 'user-menu-divider' }),
-    subscribeBtn,
+    el('div', { class: 'user-menu-email', text: currentUser?.email || '' }),
     el('div', { class: 'user-menu-divider' }),
     signOutBtn,
   );

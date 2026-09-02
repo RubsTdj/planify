@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=9">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
@@ -40,6 +40,8 @@
   <g id="ic-right"><path d="M9.5 5l6.7 7-6.7 7"/></g>
   <g id="ic-select"><path d="M4 8.5 12 4l8 4.5-8 4.5zM4 15.5 12 20l8-4.5"/></g>
   <g id="ic-trash"><path d="M4 7h16M9.5 7V4.8h5V7M6.6 7l.8 12.2A1.8 1.8 0 0 0 9.2 21h5.6a1.8 1.8 0 0 0 1.8-1.8L17.4 7"/></g>
+  <g id="ic-copy"><rect x="9" y="9" width="11.5" height="11.5" rx="3"/><path d="M15 6.5v-1a2 2 0 0 0-2-2H5.5a2 2 0 0 0-2 2V13a2 2 0 0 0 2 2h1"/></g>
+  <g id="ic-refresh"><path d="M20.5 12a8.5 8.5 0 1 1-2.8-6.3M20.5 3.5v5h-5"/></g>
   <g id="ic-logout"><path d="M14 4.5H6.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H14M17 8.5l3.5 3.5L17 15.5M20 12H9.5"/></g>
 </defs></svg>
 
@@ -148,10 +150,6 @@
     <div class="user-menu" id="userMenu" style="display:none;">
       <div class="user-menu-email" id="userMenuEmail"></div>
       <div class="user-menu-divider"></div>
-      <button class="user-menu-item" onclick="openSubscribeSheet()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-sync"/></svg>
-        Synchroniser avec mon agenda
-      </button>
       <button class="user-menu-item danger" onclick="confirmSignOut()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-logout"/></svg>
         Se déconnecter
@@ -225,7 +223,7 @@
     <div class="sheet-section">
       <div class="sheet-section-title">Perso</div>
       <div class="sheet-grid" id="customChips"></div>
-      <button class="manage-custom-btn" id="manageCustomBtn" style="display:none;">🗑️ Gérer mes types</button>
+      <button class="manage-custom-btn" id="manageCustomBtn" style="display:none;"></button>
     </div>
     <div style="height:24px;"></div>
   </div>
@@ -305,17 +303,17 @@
 </div><!-- /screenApp -->
 
 <!-- Scripts — load order matters -->
-<script src="js/config.js?v=8"></script>
-<script src="js/utils.js?v=8"></script>
-<script src="js/palette.js?v=8"></script>
-<script src="js/storage.js?v=8"></script>
-<script src="js/toast.js?v=8"></script>
-<script src="js/calendar.js?v=8"></script>
-<script src="js/sheet.js?v=8"></script>
-<script src="js/modal.js?v=8"></script>
-<script src="js/auth.js?v=8"></script>
-<script src="js/subscribe.js?v=8"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/config.js?v=9"></script>
+<script src="js/utils.js?v=9"></script>
+<script src="js/palette.js?v=9"></script>
+<script src="js/storage.js?v=9"></script>
+<script src="js/toast.js?v=9"></script>
+<script src="js/calendar.js?v=9"></script>
+<script src="js/sheet.js?v=9"></script>
+<script src="js/modal.js?v=9"></script>
+<script src="js/auth.js?v=9"></script>
+<script src="js/subscribe.js?v=9"></script>
+<script src="js/app.js?v=9"></script>
 
 </body>
 </html>

@@ -312,7 +312,6 @@ svg[viewBox="0 0 24 24"] {
 .day-cell:active { background: var(--fill); }
 .day-cell.empty { cursor: default; }
 .day-cell.empty:active { background: transparent; }
-.day-cell.past { opacity: .55; }
 .day-cell.selected { background: var(--fill-2); box-shadow: inset 0 0 0 1.5px var(--ink); }
 
 /* Le numéro porte la couleur du shift principal du jour. */
@@ -322,12 +321,20 @@ svg[viewBox="0 0 24 24"] {
   border-radius: 11px;
   font-size: 15px; font-weight: 500; color: var(--ink-2);
 }
-.day-cell.weekend .day-number { color: var(--ink-4); }
-.day-number.matin    { background: var(--matin-bg); color: var(--matin-ink); font-weight: 600; }
-.day-number.soir     { background: var(--soir-bg);  color: var(--soir-ink);  font-weight: 600; }
-.day-number.nuit     { background: var(--nuit-bg);  color: var(--nuit-ink);  font-weight: 600; }
-.day-number.repos    { background: var(--repos-bg); color: var(--repos-ink); }
-.day-number.vacances { background: var(--vac-bg);   color: var(--vac-ink);   font-weight: 600; }
+
+/* Week-end et jours passés s'effacent — mais seulement quand rien n'est
+   planifié. Aucune opacité sur la cellule : elle délaverait la couleur du
+   shift, qui est l'information principale de l'écran. Les règles de shift qui
+   suivent ont la même spécificité et reprennent donc la main (ordre source). */
+.day-cell.weekend .day-number,
+.day-cell.past .day-number { color: var(--ink-4); }
+.day-cell.past .event-tag  { opacity: .7; }
+
+.day-cell .day-number.matin    { background: var(--matin-bg); color: var(--matin-ink); font-weight: 600; }
+.day-cell .day-number.soir     { background: var(--soir-bg);  color: var(--soir-ink);  font-weight: 600; }
+.day-cell .day-number.nuit     { background: var(--nuit-bg);  color: var(--nuit-ink);  font-weight: 600; }
+.day-cell .day-number.repos    { background: var(--repos-bg); color: var(--repos-ink); }
+.day-cell .day-number.vacances { background: var(--vac-bg);   color: var(--vac-ink);   font-weight: 600; }
 .day-cell.today .day-number { box-shadow: inset 0 0 0 1.75px var(--ink); color: var(--ink); font-weight: 700; }
 .day-cell.today .day-number.plain { background: var(--ink); color: #fff; box-shadow: none; }
 
@@ -660,7 +667,6 @@ svg[viewBox="0 0 24 24"] {
     opacity: 1 !important; box-shadow: none !important;
     page-break-inside: avoid;
   }
-  .day-cell.past { opacity: 1 !important; }
   .day-number, .event-tag, .ms-bar i, .ms-leg i {
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
     animation: none !important;

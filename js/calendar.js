@@ -309,7 +309,7 @@ function printCalendar() {
   document.getElementById('printDate').textContent =
     `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} à ${now.getHours()}h${String(now.getMinutes()).padStart(2, '0')}`;
   buildPrintLegend();
-  showToast('🖨️ Préparation...');
+  showToast('Préparation de l\'impression…');
 
   // Pre-emptively swap to the print render — safety net for browsers that
   // don't fire `beforeprint` (the listener will still no-op the class add).

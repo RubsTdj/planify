@@ -50,7 +50,7 @@ async function rotateCalendarToken() {
     showToast('Échec de la régénération');
     return null;
   }
-  showToast('🔄 Nouveau lien généré');
+  showToast('Nouveau lien généré');
   return tok;
 }
 
@@ -79,7 +79,7 @@ async function copyToClipboard(text) {
 // Ouvre la modal d'abonnement (chargée à la demande, jamais avant).
 async function openSubscribeSheet() {
   closeUserMenu();
-  showToast('🔄 Préparation du lien…');
+  showToast('Préparation du lien…');
 
   const token = await getOrCreateCalendarToken();
   if (!token) return;
@@ -117,7 +117,7 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
   urlInput.value = httpsUrl;
   urlInput.addEventListener('click', () => urlInput.select());
 
-  const copyBtn = el('button', { class: 'btn btn-primary', text: '📋 Copier le lien' });
+  const copyBtn = el('button', { class: 'btn btn-primary' }, icon('copy'), 'Copier le lien');
   copyBtn.addEventListener('click', async () => {
     const ok = await copyToClipboard(httpsUrl);
     showToast(ok ? 'Lien copié' : 'Copie échouée');
@@ -127,7 +127,7 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
   const appleBtn = el('a', {
     class: 'btn btn-ghost subscribe-deeplink',
     attrs: { href: webcalUrl },
-    text: '🍎 Ajouter à Apple Calendar',
+    text: 'Ajouter à Apple Calendar',
   });
 
   // Google Calendar : pas de schéma deep-link, on ouvre la page d'ajout par URL.
@@ -135,13 +135,11 @@ function buildSubscribeSheet(httpsUrl, webcalUrl) {
   const googleBtn = el('a', {
     class: 'btn btn-ghost subscribe-deeplink',
     attrs: { href: googleHref, target: '_blank', rel: 'noopener noreferrer' },
-    text: '🟦 Ajouter à Google Agenda',
+    text: 'Ajouter à Google Agenda',
   });
 
-  const rotateBtn = el('button', {
-    class: 'manage-custom-btn',
-    text: '🔄 Régénérer le lien (révoque l\'ancien)',
-  });
+  const rotateBtn = el('button', { class: 'manage-custom-btn' },
+    icon('refresh'), 'Régénérer le lien (révoque l\'ancien)');
   rotateBtn.addEventListener('click', async () => {
     const ok = window.confirm('Régénérer le lien rendra l\'URL actuelle invalide. Continuer ?');
     if (!ok) return;
